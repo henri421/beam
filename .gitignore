@@ -1,0 +1,13 @@
+.worktrees/
+node_modules
+dist/
+
+# Documentation de conception : conservee en local, hors du depot public
+docs/superpowers/
+
+# Memoire des agents : outillage local, jamais du contenu de projet
+.claude/
+
+# Construction : produite et publiee par la CI, jamais suivie
+docs/*
+!docs/validation/

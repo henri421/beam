@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="theme-color" content="#f7f7f6" />
+    <link rel="icon" href="./icone.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icone-192.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>poutres-continues — efforts et deformee des poutres hyperstatiques</title>
+  </head>
+  <body>
+    <nav class="barre" aria-label="suite d'outils">
+      <div class="barre-corps">
+        <span class="barre-nom">Aedificium &middot; Analyse</span>
+        <a class="barre-lien" href="https://henri421.github.io/WebAedificium/" target="_blank" rel="noopener"
+          >Suite Aedificium &#8599;</a
+        >
+      </div>
+    </nav>
+
+    <header>
+      <h1>poutres-continues</h1>
+      <p class="sous-titre">
+        Reactions, moments flechissants, efforts tranchants et deformee d'une poutre droite continue ou hyperstatique :
+        appuis simples, encastrements, encastrements glissants, ressorts, rotules et tassements d'appui.
+      </p>
+      <p class="avertissement">
+        Aide au calcul : l'outil constate, il ne prescrit pas. Calcul elastique lineaire au premier ordre sur les
+        charges telles que saisies : les combinaisons, les coefficients partiels, les charges alternees et la
+        redistribution restent a la charge de l'ingenieur.
+      </p>
+    </header>
+
+    <main>
+      <section id="saisie" aria-label="saisie de la poutre">
+        <form id="formulaire" autocomplete="off">
+          <div class="selecteur">
+            <label for="exemple"><span>Partir d'un exemple</span></label>
+            <select id="exemple" data-role="exemple">
+              <option value="">&mdash;</option>
+            </select>
+          </div>
+
+          <fieldset>
+            <legend>Poutre</legend>
+            <label><span>Longueur totale L (m)</span><input type="text" inputmode="decimal" data-champ="longueur" /></label>
+            <label><span>Module E (MPa)</span><input type="text" inputmode="decimal" data-champ="E" /></label>
+            <label><span>Inertie I (cm<sup>4</sup>)</span><input type="text" inputmode="decimal" data-champ="I" /></label>
+            <p class="note" data-role="rigidite"></p>
+          </fieldset>
+
+          <fieldset>
+            <legend>Appuis</legend>
+            <div data-role="appuis"></div>
+            <div class="boutons">
+              <button type="button" data-action="ajouter" data-liste="appuis">+ appui</button>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Rotules internes</legend>
+            <div data-role="rotules"></div>
+            <div class="boutons">
+              <button type="button" data-action="ajouter" data-liste="rotules">+ rotule</button>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Charges</legend>
+            <div data-role="charges"></div>
+            <div class="boutons">
+              <button type="button" data-action="ajouter" data-liste="charges" data-type="ponctuelle">+ ponctuelle</button>
+              <button type="button" data-action="ajouter" data-liste="charges" data-type="repartie">+ repartie</button>
+              <button type="button" data-action="ajouter" data-liste="charges" data-type="lineaire">+ triangulaire</button>
+              <button type="button" data-action="ajouter" data-liste="charges" data-type="moment">+ moment</button>
+            </div>
+            <p class="note">
+              Forces et charges reparties positives vers le bas ; moment positif dans le sens trigonometrique
+              (&#8634;). Une charge triangulaire va de q<sub>a</sub> en a a q<sub>b</sub> en b : avec deux valeurs non
+              nulles, elle est trapezoidale.
+            </p>
+          </fieldset>
+
+          <p data-role="erreur-saisie" class="erreur" role="alert" hidden></p>
+          <div class="boutons boutons-calcul">
+            <button type="submit" class="principal">Calculer</button>
+            <button type="button" data-action="enregistrer">Enregistrer le modele</button>
+            <label class="bouton-fichier"
+              ><input type="file" accept=".json,application/json" data-role="ouvrir" hidden /><span>Ouvrir un modele</span></label
+            >
+          </div>
+        </form>
+      </section>
+
+      <div class="colonne">
+        <section id="schema" aria-label="schema mecanique">
+          <h2>Schema mecanique</h2>
+          <div data-role="schema"></div>
+        </section>
+
+        <section id="resultats" aria-label="resultats">
+          <h2>Resultats</h2>
+          <p data-role="perime" class="alerte" hidden>
+            Les donnees ont change depuis le dernier calcul : relancer le calcul.
+          </p>
+          <p data-role="erreur-calcul" class="erreur" role="alert" hidden></p>
+          <p data-role="attente" class="note">Renseigner la poutre, puis lancer le calcul.</p>
+          <div data-role="resultats-corps" hidden>
+            <div data-role="resume"></div>
+            <h3>Diagrammes</h3>
+            <div data-role="diagrammes"></div>
+            <h3>Appuis</h3>
+            <div data-role="reactions"></div>
+            <h3>Travees</h3>
+            <div data-role="travees"></div>
+          </div>
+        </section>
+
+        <section id="sorties" aria-label="sorties">
+          <h2>Sorties</h2>
+          <div class="boutons">
+            <button type="button" data-action="exporter-dessins">Dessins (SVG)</button>
+            <button type="button" data-action="exporter-resultats">Resultats (CSV)</button>
+            <button type="button" data-action="exporter-valeurs">Valeurs le long de la poutre (CSV)</button>
+            <button type="button" data-action="exporter-note">Note de calcul (HTML imprimable)</button>
+          </div>
+          <p class="note">
+            La note s'ouvre dans un onglet et s'imprime en PDF par le navigateur. Le modele enregistre (JSON) se rouvre
+            tel quel dans l'outil.
+          </p>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <p>
+        Methode des deplacements, elements de poutre d'Euler-Bernoulli ; solution exacte entre noeuds (charges au plus
+        lineaires). Hors perimetre : inertie variable, deformation d'effort tranchant, effort normal et second ordre,
+        appuis unilateraux, enveloppes de charges alternees et combinaisons.
+      </p>
+    </footer>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
