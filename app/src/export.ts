@@ -43,7 +43,14 @@ svg .courbe { fill: none; stroke: var(--texte); stroke-width: 1.4; }
 svg .aplat-positif { fill: var(--compression); fill-opacity: 0.2; stroke: none; }
 svg .aplat-negatif { fill: var(--traction); fill-opacity: 0.2; stroke: none; }
 svg .deformee { fill: none; stroke: var(--compression); stroke-width: 2; }
-svg .point { fill: var(--texte); }`;
+svg .point { fill: var(--texte); }
+svg .aplat-enveloppe { fill: var(--compression); fill-opacity: 0.14; stroke: none; }
+svg .courbe-max { fill: none; stroke: var(--texte); stroke-width: 1.4; }
+svg .courbe-min { fill: none; stroke: var(--texte); stroke-width: 1.4; stroke-dasharray: 5 3; }
+svg .courbe-decalee { fill: none; stroke: var(--neutre); stroke-width: 1.2; stroke-dasharray: 4 3; }
+svg .resistant { fill: none; stroke: var(--traction); stroke-width: 2; }
+svg .coffrage { fill: var(--beton); stroke: var(--texte-faible); stroke-width: 1; }
+svg .barre { stroke: var(--traction); stroke-width: 2.4; stroke-linecap: round; }`;
 
 export interface NoteDeCalcul {
   titre: string;

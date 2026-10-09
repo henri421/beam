@@ -37,7 +37,23 @@ export type Appui =
 
 export type TypeAppui = Appui['type'];
 
-export type Charge =
+/**
+ * Cas de charge : G permanent, applique partout avec le meme coefficient ;
+ * Q variable, place ou retire travee par travee dans les combinaisons.
+ */
+export type CasDeCharge = 'G' | 'Q';
+
+export const LIBELLES_CAS: Record<CasDeCharge, string> = {
+  G: 'permanente G',
+  Q: 'variable Q',
+};
+
+export type Charge = ChargeSansCas & {
+  /** Cas de charge ; absent, la charge est permanente (G). */
+  cas?: CasDeCharge;
+};
+
+type ChargeSansCas =
   /** Force ponctuelle P (kN), positive vers le bas. */
   | { type: 'ponctuelle'; x: number; P: number }
   /** Couple ponctuel M (kN.m), positif dans le sens trigonometrique. */

@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { JETONS, valeursDesJetons } from 'aedificium-ui';
-import { calculerPoutre } from '../../src/index';
+import { calculerBetonArme, calculerCombinaisons, calculerPoutre, profilRecommande } from '../../src/index';
 import {
   EXEMPLES,
+  donneesDepuisModele,
   lignesAppuis,
   lignesCharges,
   modeleDepuisJson,
@@ -18,19 +19,19 @@ import { blocsResultats, tableauReactions, valeursLeLongDeLaPoutre } from '../..
 import { STYLES_TRACE, noteDeCalculHtml } from '../../app/src/export';
 
 describe('saisie', () => {
-  it('le modele par defaut se lit : 15 m, EI = 30 000 MPa x 312 500 cm4 = 93 750 kN.m2', () => {
+  it('le modele par defaut se lit : 16 m, EI = 31 000 MPa x 540 000 cm4 = 167 400 kN.m2', () => {
     const lecture = poutreDepuisModele(modeleParDefaut());
     expect(lecture.ok).toBe(true);
     if (!lecture.ok) return;
-    expect(lecture.poutre.longueur).toBe(15);
-    expect(lecture.poutre.EI).toBeCloseTo(93750, 9);
+    expect(lecture.poutre.longueur).toBe(16);
+    expect(lecture.poutre.EI).toBeCloseTo(167400, 9);
     expect(lecture.poutre.appuis).toHaveLength(4);
   });
 
   it('virgule decimale acceptee, tassement et raideur vides valent zero', () => {
     const m = modeleParDefaut();
     m.longueur = '15,0';
-    m.appuis[0] = { type: 'ressort', x: '0', tassement: '', k_vertical: '5000', k_rotation: '' };
+    m.appuis[0] = { type: 'ressort', x: '0', tassement: '', k_vertical: '5000', k_rotation: '', delta: '' };
     const lecture = poutreDepuisModele(m);
     expect(lecture.ok && lecture.poutre.appuis[0]).toEqual({ type: 'ressort', x: 0, k_vertical: 5000, k_rotation: 0 });
   });
@@ -59,6 +60,33 @@ describe('saisie', () => {
       expect(lecture.ok).toBe(true);
       if (lecture.ok) expect(() => calculerPoutre(lecture.poutre)).not.toThrow();
     }
+  });
+
+  it('l exemple beton arme se calcule de bout en bout sans alerte', () => {
+    const d = donneesDepuisModele(modeleParDefaut());
+    expect(d.ok).toBe(true);
+    if (!d.ok || d.ba === null) throw new Error('lecture');
+    expect(d.poutre.charges.map((c) => c.cas)).toEqual(['G', 'Q']);
+    const r = calculerCombinaisons(d.poutre, d.combinaisons, profilRecommande());
+    const ba = calculerBetonArme(r.casELU, r.elu, d.ba, profilRecommande(), d.combinaisons.redistribution);
+    expect(ba.avertissements).toEqual([]);
+    expect(ba.zones.every((z) => z.renforts !== null)).toBe(true);
+  });
+
+  it('un lit illisible est nomme', () => {
+    const m = modeleParDefaut();
+    m.ba.montage = 'deux HA';
+    const d = donneesDepuisModele(m);
+    expect(d.ok).toBe(false);
+    if (!d.ok) expect(d.message).toContain('Aciers de montage');
+  });
+
+  it('un ancien modele sans cas ni beton arme se relit', () => {
+    const ancien = JSON.stringify({ format: 'poutres-continues', version: 1, modele: { longueur: '6', E: '1', I: '1', appuis: [], rotules: [], charges: [{ type: 'repartie', a: '0', b: '6', q: '5' }] } });
+    const m = modeleDepuisJson(ancien);
+    expect(m.charges[0].cas).toBe('G');
+    expect(m.ba.actif).toBe(false);
+    expect(m.combinaisons.formule).toBe('6.10');
   });
 
   it('le fichier de modele fait l aller-retour, un fichier etranger est refuse', () => {

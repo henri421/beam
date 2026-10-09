@@ -9,10 +9,17 @@
 import { echapper, lireNombre } from 'aedificium-ui';
 import {
   LIBELLES_APPUI,
+  LIBELLES_CAS,
   LIBELLES_CHARGE,
+  lireLit,
   rigiditeFlexion,
+  zonesDeChargement,
   type Appui,
+  type CasDeCharge,
   type Charge,
+  type DonneesBA,
+  type DonneesCombinaisons,
+  type Formule,
   type Poutre,
   type TypeAppui,
   type TypeCharge,
@@ -24,10 +31,13 @@ export interface LigneAppui {
   tassement: string;
   k_vertical: string;
   k_rotation: string;
+  /** Coefficient de redistribution delta (beton arme), vide = 1. */
+  delta: string;
 }
 
 export interface LigneCharge {
   type: TypeCharge;
+  cas: CasDeCharge;
   x: string;
   P: string;
   M: string;
@@ -38,6 +48,39 @@ export interface LigneCharge {
   q_b: string;
 }
 
+export interface SaisieCombinaisons {
+  formule: Formule;
+  psi0: string;
+  psi1: string;
+  psi2: string;
+  gamma_T: string;
+}
+
+export interface SaisieBA {
+  actif: boolean;
+  forme: 'rectangle' | 'te';
+  b_w: string;
+  h: string;
+  b_eff: string;
+  h_f: string;
+  fck: string;
+  fyk: string;
+  classe: 'A' | 'B' | 'C';
+  a_inf: string;
+  a_sup: string;
+  cotTheta: string;
+  cadre_phi: string;
+  cadre_brins: string;
+  cadre_s: string;
+  largeurAppui: string;
+  monolithique: boolean;
+  montage: string;
+  /** Par zone (travee ou console), dans l'ordre des abscisses. */
+  zones: { filants: string; renforts: string }[];
+  /** Par appui, dans l'ordre de saisie. */
+  chapeaux: string[];
+}
+
 export interface ModeleSaisie {
   longueur: string;
   E: string;
@@ -45,6 +88,38 @@ export interface ModeleSaisie {
   appuis: LigneAppui[];
   rotules: string[];
   charges: LigneCharge[];
+  combinaisons: SaisieCombinaisons;
+  ba: SaisieBA;
+}
+
+export function combinaisonsParDefaut(): SaisieCombinaisons {
+  // psi de la categorie A (habitation), tableau A1.1 : a adapter a l'usage.
+  return { formule: '6.10', psi0: '0.7', psi1: '0.5', psi2: '0.3', gamma_T: '1' };
+}
+
+export function baParDefaut(): SaisieBA {
+  return {
+    actif: false,
+    forme: 'rectangle',
+    b_w: '300',
+    h: '500',
+    b_eff: '1000',
+    h_f: '150',
+    fck: '25',
+    fyk: '500',
+    classe: 'B',
+    a_inf: '50',
+    a_sup: '50',
+    cotTheta: '2.5',
+    cadre_phi: '8',
+    cadre_brins: '2',
+    cadre_s: '200',
+    largeurAppui: '200',
+    monolithique: false,
+    montage: '2HA12',
+    zones: [],
+    chapeaux: [],
+  };
 }
 
 export type Liste = 'appuis' | 'rotules' | 'charges';
@@ -53,35 +128,79 @@ export const TYPES_APPUI: TypeAppui[] = ['appui-simple', 'encastrement', 'glissi
 export const TYPES_CHARGE: TypeCharge[] = ['ponctuelle', 'repartie', 'lineaire', 'moment'];
 
 export function nouvelAppui(x: string, type: TypeAppui = 'appui-simple'): LigneAppui {
-  return { type, x, tassement: '', k_vertical: '', k_rotation: '' };
+  return { type, x, tassement: '', k_vertical: '', k_rotation: '', delta: '' };
 }
 
 /** Ligne de charge neuve : reparties sur toute la longueur, intensites de 10 a ajuster. */
 export function nouvelleCharge(type: TypeCharge, longueur: string): LigneCharge {
-  return { type, x: '', P: '10', M: '10', a: '0', b: longueur, q: '10', q_a: '0', q_b: '10' };
+  return { type, cas: 'G', x: '', P: '10', M: '10', a: '0', b: longueur, q: '10', q_a: '0', q_b: '10' };
 }
 
 function charge(partiel: Partial<LigneCharge> & { type: TypeCharge }): LigneCharge {
-  return { x: '', P: '', M: '', a: '', b: '', q: '', q_a: '', q_b: '', ...partiel };
+  return { cas: 'G', x: '', P: '', M: '', a: '', b: '', q: '', q_a: '', q_b: '', ...partiel };
+}
+
+function exemple(m: Omit<ModeleSaisie, 'combinaisons' | 'ba'> & { ba?: Partial<SaisieBA> }): ModeleSaisie {
+  return { ...m, combinaisons: combinaisonsParDefaut(), ba: { ...baParDefaut(), ...m.ba } };
 }
 
 // --- Exemples ---------------------------------------------------------------------
 
 export const EXEMPLES: Record<string, { libelle: string; modele: ModeleSaisie }> = {
+  'ba-trois-travees': {
+    libelle: 'Poutre BA trois travees, G + Q, ferraillage',
+    modele: exemple({
+      longueur: '16',
+      E: '31000',
+      I: '540000',
+      appuis: ['0', '5', '11', '16'].map((x) => nouvelAppui(x)),
+      rotules: [],
+      charges: [
+        charge({ type: 'repartie', cas: 'G', a: '0', b: '16', q: '25' }),
+        charge({ type: 'repartie', cas: 'Q', a: '0', b: '16', q: '15' }),
+      ],
+      ba: {
+        actif: true,
+        h: '600',
+        zones: [
+          { filants: '3HA12', renforts: '2HA14' },
+          { filants: '3HA12', renforts: '2HA12' },
+          { filants: '3HA12', renforts: '2HA14' },
+        ],
+        chapeaux: ['', '3HA16', '3HA16', ''],
+      },
+    }),
+  },
   'trois-travees': {
     libelle: 'Trois travees egales, charge uniforme',
-    modele: {
+    modele: exemple({
       longueur: '15',
       E: '30000',
       I: '312500',
       appuis: ['0', '5', '10', '15'].map((x) => nouvelAppui(x)),
       rotules: [],
       charges: [charge({ type: 'repartie', a: '0', b: '15', q: '10' })],
-    },
+    }),
+  },
+  'deux-consoles': {
+    libelle: 'Biappuyee avec une console de chaque cote',
+    modele: exemple({
+      longueur: '10',
+      E: '210000',
+      I: '8356',
+      appuis: [nouvelAppui('2'), nouvelAppui('8')],
+      rotules: [],
+      charges: [
+        charge({ type: 'repartie', a: '0', b: '10', q: '10' }),
+        charge({ type: 'repartie', cas: 'Q', a: '0', b: '10', q: '5' }),
+        charge({ type: 'ponctuelle', x: '0', P: '5' }),
+        charge({ type: 'ponctuelle', x: '10', P: '5' }),
+      ],
+    }),
   },
   'encastree-appuyee': {
     libelle: 'Encastree - appuyee, charge triangulaire et force',
-    modele: {
+    modele: exemple({
       longueur: '6',
       E: '210000',
       I: '8356',
@@ -89,35 +208,24 @@ export const EXEMPLES: Record<string, { libelle: string; modele: ModeleSaisie }>
       rotules: [],
       charges: [
         charge({ type: 'lineaire', a: '0', b: '6', q_a: '0', q_b: '12' }),
-        charge({ type: 'ponctuelle', x: '2', P: '20' }),
+        charge({ type: 'ponctuelle', cas: 'Q', x: '2', P: '20' }),
       ],
-    },
-  },
-  'deux-consoles': {
-    libelle: 'Biappuyee avec une console de chaque cote',
-    modele: {
-      longueur: '10',
-      E: '210000',
-      I: '8356',
-      appuis: [nouvelAppui('2'), nouvelAppui('8')],
-      rotules: [],
-      charges: [charge({ type: 'repartie', a: '0', b: '10', q: '10' }), charge({ type: 'ponctuelle', x: '0', P: '5' }), charge({ type: 'ponctuelle', x: '10', P: '5' })],
-    },
+    }),
   },
   gerber: {
     libelle: 'Poutre Gerber (rotules), deux travees et console',
-    modele: {
+    modele: exemple({
       longueur: '16',
       E: '210000',
       I: '23130',
       appuis: [nouvelAppui('0'), nouvelAppui('7'), nouvelAppui('14')],
       rotules: ['8.5'],
-      charges: [charge({ type: 'repartie', a: '0', b: '16', q: '15' }), charge({ type: 'ponctuelle', x: '16', P: '10' })],
-    },
+      charges: [charge({ type: 'repartie', a: '0', b: '16', q: '15' }), charge({ type: 'ponctuelle', cas: 'Q', x: '16', P: '10' })],
+    }),
   },
   ressorts: {
     libelle: 'Appui elastique et encastrement elastique',
-    modele: {
+    modele: exemple({
       longueur: '12',
       E: '30000',
       I: '540000',
@@ -128,23 +236,23 @@ export const EXEMPLES: Record<string, { libelle: string; modele: ModeleSaisie }>
       ],
       rotules: [],
       charges: [charge({ type: 'repartie', a: '0', b: '12', q: '25' }), charge({ type: 'moment', x: '12', M: '-30' })],
-    },
+    }),
   },
   tassement: {
     libelle: 'Deux travees, tassement de l appui central',
-    modele: {
+    modele: exemple({
       longueur: '12',
       E: '30000',
       I: '540000',
       appuis: [nouvelAppui('0'), { ...nouvelAppui('6'), tassement: '10' }, nouvelAppui('12')],
       rotules: [],
       charges: [charge({ type: 'repartie', a: '0', b: '12', q: '20' })],
-    },
+    }),
   },
 };
 
 export function modeleParDefaut(): ModeleSaisie {
-  return structuredClone(EXEMPLES['trois-travees'].modele);
+  return structuredClone(EXEMPLES['ba-trois-travees'].modele);
 }
 
 // --- Lecture ---------------------------------------------------------------------
@@ -203,11 +311,11 @@ export function poutreDepuisModele(m: ModeleSaisie): Lecture {
       const n = `Charge ${i + 1}`;
       switch (l.type) {
         case 'ponctuelle':
-          return { type: 'ponctuelle', x: nombre(l.x, `${n}, abscisse x`), P: nombre(l.P, `${n}, force P`) };
+          return { type: 'ponctuelle', x: nombre(l.x, `${n}, abscisse x`), P: nombre(l.P, `${n}, force P`), cas: l.cas };
         case 'moment':
-          return { type: 'moment', x: nombre(l.x, `${n}, abscisse x`), M: nombre(l.M, `${n}, moment M`) };
+          return { type: 'moment', x: nombre(l.x, `${n}, abscisse x`), M: nombre(l.M, `${n}, moment M`), cas: l.cas };
         case 'repartie':
-          return { type: 'repartie', a: nombre(l.a, `${n}, debut a`), b: nombre(l.b, `${n}, fin b`), q: nombre(l.q, `${n}, intensite q`) };
+          return { type: 'repartie', a: nombre(l.a, `${n}, debut a`), b: nombre(l.b, `${n}, fin b`), q: nombre(l.q, `${n}, intensite q`), cas: l.cas };
         case 'lineaire':
           return {
             type: 'lineaire',
@@ -215,10 +323,80 @@ export function poutreDepuisModele(m: ModeleSaisie): Lecture {
             b: nombre(l.b, `${n}, fin b`),
             q_a: nombre(l.q_a, `${n}, intensite q_a`),
             q_b: nombre(l.q_b, `${n}, intensite q_b`),
+            cas: l.cas,
           };
       }
     });
     return { ok: true, poutre: { longueur, EI, appuis, rotules, charges } };
+  } catch (e) {
+    return { ok: false, message: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+/** Ajuste les listes de ferraillage au nombre de zones et d'appuis courant. */
+export function ajusterFerraillage(m: ModeleSaisie, nbZones: number): void {
+  while (m.ba.zones.length < nbZones) m.ba.zones.push({ filants: '', renforts: '' });
+  m.ba.zones.length = nbZones;
+  while (m.ba.chapeaux.length < m.appuis.length) m.ba.chapeaux.push('');
+  m.ba.chapeaux.length = m.appuis.length;
+}
+
+export type LectureComplete =
+  | { ok: true; poutre: Poutre; combinaisons: DonneesCombinaisons; ba: DonneesBA | null }
+  | { ok: false; message: string };
+
+/**
+ * Toutes les donnees du calcul : poutre, combinaisons et, si le beton arme
+ * est active, section, materiaux et aciers choisis.
+ */
+export function donneesDepuisModele(m: ModeleSaisie): LectureComplete {
+  const lecture = poutreDepuisModele(m);
+  if (!lecture.ok) return lecture;
+  try {
+    const c = m.combinaisons;
+    const combinaisons: DonneesCombinaisons = {
+      formule: c.formule,
+      psi0: nombre(c.psi0, 'psi_0'),
+      psi1: nombre(c.psi1, 'psi_1'),
+      psi2: nombre(c.psi2, 'psi_2'),
+      gamma_T: nombre(c.gamma_T, 'gamma des tassements'),
+      redistribution: m.ba.actif ? m.appuis.map((a, i) => (a.delta.trim() === '' ? 1 : nombre(a.delta, `Appui ${i + 1}, delta`))) : m.appuis.map(() => 1),
+    };
+    if (!m.ba.actif) return { ok: true, poutre: lecture.poutre, combinaisons, ba: null };
+    const b = m.ba;
+    const nbZones = zonesDeChargement(lecture.poutre).length;
+    ajusterFerraillage(m, nbZones);
+    const lit = (t: string, quoi: string) => {
+      try {
+        return lireLit(t);
+      } catch (e) {
+        throw new SaisieInvalide(`${quoi} : ${e instanceof Error ? e.message : String(e)}`);
+      }
+    };
+    const ba: DonneesBA = {
+      section: {
+        forme: b.forme,
+        b_w: nombre(b.b_w, 'Largeur d ame b_w'),
+        h: nombre(b.h, 'Hauteur h'),
+        b_eff: b.forme === 'te' ? nombre(b.b_eff, 'Largeur de table b_eff') : nombre(b.b_w, 'Largeur d ame b_w'),
+        h_f: b.forme === 'te' ? nombre(b.h_f, 'Epaisseur de table h_f') : 0,
+      },
+      fck: nombre(b.fck, 'f_ck'),
+      fyk: nombre(b.fyk, 'f_yk'),
+      classeAcier: b.classe,
+      a_inf: nombre(b.a_inf, 'a_inf'),
+      a_sup: nombre(b.a_sup, 'a_sup'),
+      cotTheta: nombre(b.cotTheta, 'cot theta'),
+      cadres: { phi: nombre(b.cadre_phi, 'Diametre des cadres'), brins: nombre(b.cadre_brins, 'Nombre de brins'), s: nombre(b.cadre_s, 'Espacement des cadres') },
+      largeurAppui: nombreOuZero(b.largeurAppui, 'Largeur des appuis'),
+      extremitesMonolithiques: b.monolithique,
+      aciers: {
+        zones: b.zones.map((z, j) => ({ filants: lit(z.filants, `Zone ${j + 1}, filants`), renforts: lit(z.renforts, `Zone ${j + 1}, renforts`) })),
+        appuis: b.chapeaux.map((t, i) => ({ chapeaux: lit(t, `Appui ${i + 1}, chapeaux`) })),
+        montage: lit(b.montage, 'Aciers de montage'),
+      },
+    };
+    return { ok: true, poutre: lecture.poutre, combinaisons, ba };
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : String(e) };
   }
@@ -260,6 +438,7 @@ export function lignesAppuis(m: ModeleSaisie): string {
       if (l.type === 'ressort' || l.type === 'encastrement-elastique') {
         champs.push(champ('appuis', i, 'k_rotation', 'k<sub>&theta;</sub> (kN&middot;m/rad)', l.k_rotation, l.type === 'ressort' ? '0' : ''));
       }
+      if (m.ba.actif) champs.push(champ('appuis', i, 'delta', '&delta; redistribution', l.delta, '1'));
       return `<div class="ligne">${enTete('appuis', i, `A${i + 1}`, choix('appuis', i, l.type, TYPES_APPUI, LIBELLES_APPUI))}<div class="ligne-champs">${champs.join('')}</div></div>`;
     })
     .join('');
@@ -286,9 +465,40 @@ export function lignesCharges(m: ModeleSaisie): string {
             : l.type === 'repartie'
               ? [c('a', 'de a (m)'), c('b', 'a b (m)'), c('q', 'q (kN/m, &darr;+)')]
               : [c('a', 'de a (m)'), c('b', 'a b (m)'), c('q_a', 'q<sub>a</sub> (kN/m)'), c('q_b', 'q<sub>b</sub> (kN/m)')];
-      return `<div class="ligne">${enTete('charges', i, `C${i + 1}`, choix('charges', i, l.type, TYPES_CHARGE, LIBELLES_CHARGE))}<div class="ligne-champs">${champs.join('')}</div></div>`;
+      const cas =
+        `<select data-liste="charges" data-index="${i}" data-champ="cas" aria-label="cas de charge" class="choix-cas">` +
+        (['G', 'Q'] as CasDeCharge[]).map((k) => `<option value="${k}" title="${LIBELLES_CAS[k]}"${k === l.cas ? ' selected' : ''}>${k}</option>`).join('') +
+        `</select>`;
+      return `<div class="ligne">${enTete('charges', i, `C${i + 1}`, cas + choix('charges', i, l.type, TYPES_CHARGE, LIBELLES_CHARGE))}<div class="ligne-champs">${champs.join('')}</div></div>`;
     })
     .join('');
+}
+
+/** Lignes des aciers choisis : une par zone (inferieurs), une par appui (chapeaux). */
+export function lignesFerraillage(m: ModeleSaisie, zones: { nom: string; x0: number; x1: number }[], xsAppuis: number[]): string {
+  const texte = (liste: string, i: number, nom: string, lib: string, valeur: string): string =>
+    `<label class="champ"><span>${lib}</span><input type="text" data-liste="${liste}" data-index="${i}" data-champ="${nom}" ` +
+    `value="${echapper(valeur)}" placeholder="3HA16" /></label>`;
+  const z = zones
+    .map(
+      (zone, j) =>
+        `<div class="ligne"><div class="ligne-tete"><span class="ligne-num">${echapper(zone.nom)}</span>` +
+        `<span class="ligne-type">${zone.x0} – ${zone.x1} m, aciers inferieurs</span></div><div class="ligne-champs">` +
+        texte('ferraillage', j, 'filants', 'filants', m.ba.zones[j]?.filants ?? '') +
+        texte('ferraillage', j, 'renforts', 'renforts', m.ba.zones[j]?.renforts ?? '') +
+        `</div></div>`
+    )
+    .join('');
+  const a = xsAppuis
+    .map(
+      (x, i) =>
+        `<div class="ligne"><div class="ligne-tete"><span class="ligne-num">A${i + 1}</span>` +
+        `<span class="ligne-type">x = ${x} m, aciers superieurs</span></div><div class="ligne-champs">` +
+        texte('chapeaux', i, 'chapeaux', 'chapeaux', m.ba.chapeaux[i] ?? '') +
+        `</div></div>`
+    )
+    .join('');
+  return z + a;
 }
 
 // --- Fichier de modele -------------------------------------------------------------
@@ -323,12 +533,20 @@ export function modeleDepuisJson(contenu: string): ModeleSaisie {
     Array.isArray(v) ? v.filter((e): e is Record<string, unknown> => e !== null && typeof e === 'object') : [];
   const appuis = tableau(m.appuis).map((a): LigneAppui => {
     if (!TYPES_APPUI.includes(a.type as TypeAppui)) throw new Error(`Type d appui inconnu : ${texte(a.type)}.`);
-    return { type: a.type as TypeAppui, x: texte(a.x), tassement: texte(a.tassement), k_vertical: texte(a.k_vertical), k_rotation: texte(a.k_rotation) };
+    return {
+      type: a.type as TypeAppui,
+      x: texte(a.x),
+      tassement: texte(a.tassement),
+      k_vertical: texte(a.k_vertical),
+      k_rotation: texte(a.k_rotation),
+      delta: texte(a.delta),
+    };
   });
   const charges = tableau(m.charges).map((c): LigneCharge => {
     if (!TYPES_CHARGE.includes(c.type as TypeCharge)) throw new Error(`Type de charge inconnu : ${texte(c.type)}.`);
     return charge({
       type: c.type as TypeCharge,
+      cas: c.cas === 'Q' ? 'Q' : 'G',
       x: texte(c.x),
       P: texte(c.P),
       M: texte(c.M),
@@ -339,6 +557,12 @@ export function modeleDepuisJson(contenu: string): ModeleSaisie {
       q_b: texte(c.q_b),
     });
   });
+  const objet = (v: unknown): Record<string, unknown> => (v !== null && typeof v === 'object' ? (v as Record<string, unknown>) : {});
+  const cDef = combinaisonsParDefaut();
+  const c = objet(m.combinaisons);
+  const bDef = baParDefaut();
+  const b = objet(m.ba);
+  const t = (v: unknown, def: string): string => (v === undefined ? def : texte(v));
   return {
     longueur: texte(m.longueur),
     E: texte(m.E),
@@ -346,5 +570,34 @@ export function modeleDepuisJson(contenu: string): ModeleSaisie {
     appuis,
     rotules: Array.isArray(m.rotules) ? m.rotules.map(texte) : [],
     charges,
+    combinaisons: {
+      formule: c.formule === '6.10ab' ? '6.10ab' : '6.10',
+      psi0: t(c.psi0, cDef.psi0),
+      psi1: t(c.psi1, cDef.psi1),
+      psi2: t(c.psi2, cDef.psi2),
+      gamma_T: t(c.gamma_T, cDef.gamma_T),
+    },
+    ba: {
+      actif: b.actif === true,
+      forme: b.forme === 'te' ? 'te' : 'rectangle',
+      b_w: t(b.b_w, bDef.b_w),
+      h: t(b.h, bDef.h),
+      b_eff: t(b.b_eff, bDef.b_eff),
+      h_f: t(b.h_f, bDef.h_f),
+      fck: t(b.fck, bDef.fck),
+      fyk: t(b.fyk, bDef.fyk),
+      classe: b.classe === 'A' || b.classe === 'C' ? b.classe : 'B',
+      a_inf: t(b.a_inf, bDef.a_inf),
+      a_sup: t(b.a_sup, bDef.a_sup),
+      cotTheta: t(b.cotTheta, bDef.cotTheta),
+      cadre_phi: t(b.cadre_phi, bDef.cadre_phi),
+      cadre_brins: t(b.cadre_brins, bDef.cadre_brins),
+      cadre_s: t(b.cadre_s, bDef.cadre_s),
+      largeurAppui: t(b.largeurAppui, bDef.largeurAppui),
+      monolithique: b.monolithique === true,
+      montage: t(b.montage, bDef.montage),
+      zones: tableau(b.zones).map((z) => ({ filants: texte(z.filants), renforts: texte(z.renforts) })),
+      chapeaux: Array.isArray(b.chapeaux) ? b.chapeaux.map(texte) : [],
+    },
   };
 }

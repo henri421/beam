@@ -148,8 +148,8 @@ function point(t: Troncon, s: number): Point {
 // --- Maillage ------------------------------------------------------------------
 
 /** Abscisses des noeuds : extremites, appuis, rotules, charges et bornes de charges. */
-function abscissesDesNoeuds(p: Poutre): number[] {
-  const brutes = [0, p.longueur, ...p.appuis.map((a) => a.x), ...p.rotules];
+export function abscissesDesNoeuds(p: Poutre, supplementaires: number[] = []): number[] {
+  const brutes = [0, p.longueur, ...p.appuis.map((a) => a.x), ...p.rotules, ...supplementaires];
   for (const c of p.charges) {
     if (c.type === 'ponctuelle' || c.type === 'moment') brutes.push(c.x);
     else brutes.push(c.a, c.b);
@@ -212,7 +212,7 @@ function forcesEquivalentes(qa: number, qb: number, L: number): number[] {
  * Reactions, efforts et deformee d'une poutre. Leve une Error pour une
  * donnee incoherente ou une poutre hypostatique (mecanisme).
  */
-export function calculerPoutre(poutre: Poutre): ResultatPoutre {
+export function calculerPoutre(poutre: Poutre, options: { noeuds?: number[] } = {}): ResultatPoutre {
   verifierDonnees(poutre);
   const degre = degreHyperstatique(poutre);
   if (degre < 0) {
@@ -221,7 +221,9 @@ export function calculerPoutre(poutre: Poutre): ResultatPoutre {
     );
   }
 
-  const noeuds = abscissesDesNoeuds(poutre);
+  // Noeuds imposes : des cas de charge calcules separement partagent ainsi
+  // le meme decoupage, et leurs troncons se superposent indice par indice.
+  const noeuds = abscissesDesNoeuds(poutre, options.noeuds);
   const n = noeuds.length;
   const estRotule = noeuds.map((x) => poutre.rotules.some((r) => Math.abs(r - x) < TOLERANCE_X));
 
@@ -333,24 +335,59 @@ export function calculerPoutre(poutre: Poutre): ResultatPoutre {
 
   // Reactions : K u - F aux ddl imposes, -k u aux ressorts.
   const residu = (d: number): number => K[d].reduce((s, kij, j) => s + kij * u[j], 0) - F[d];
-  const reactions: Reaction[] = poutre.appuis.map((a) => {
+  const brutes: ReactionBrute[] = poutre.appuis.map((a) => {
     const i = indiceDuNoeud(noeuds, a.x);
     const v = ddlV[i];
     const t = ddlTGauche[i];
     const valeur = (d: number): number => (imposes.has(d) ? residu(d) : ressorts.has(d) ? -(ressorts.get(d) as number) * u[d] : 0);
-    const gauche = i > 0 ? troncons[i - 1] : null;
-    const droite = i < n - 1 ? troncons[i] : null;
+    return { R: valeur(v), M_reaction: valeur(t), w: -u[v] * MM_PAR_M, rotation: u[t] * MM_PAR_M };
+  });
+
+  return assemblerResultat(poutre, degre, troncons, brutes, sommeDesCharges(poutre));
+}
+
+/** Somme des charges verticales d'une poutre (kN, vers le bas). */
+export function sommeDesCharges(poutre: Poutre): number {
+  let charges = 0;
+  for (const c of poutre.charges) {
+    if (c.type === 'ponctuelle') charges += c.P;
+    if (c.type === 'repartie') charges += c.q * (c.b - c.a);
+    if (c.type === 'lineaire') charges += ((c.q_a + c.q_b) / 2) * (c.b - c.a);
+  }
+  return charges;
+}
+
+/** Reaction d'appui avant mise en forme : ce qui se superpose lineairement. */
+export interface ReactionBrute {
+  R: number;
+  M_reaction: number;
+  w: number;
+  rotation: number;
+}
+
+/**
+ * Resultat complet depuis les troncons et les reactions : efforts de part et
+ * d'autre des appuis, courbes, travees, extremums. Sert au calcul direct et
+ * a toute combinaison lineaire de cas de charge (memes troncons).
+ */
+export function assemblerResultat(
+  poutre: Poutre,
+  degre: number,
+  troncons: Troncon[],
+  brutes: ReactionBrute[],
+  charges: number
+): ResultatPoutre {
+  const reactions: Reaction[] = poutre.appuis.map((a, k) => {
+    const gauche = troncons.find((t) => Math.abs(t.x1 - a.x) < TOLERANCE_X) ?? null;
+    const droite = troncons.find((t) => Math.abs(t.x0 - a.x) < TOLERANCE_X) ?? null;
     const Lg = gauche === null ? 0 : gauche.x1 - gauche.x0;
     return {
       appui: a,
-      R: valeur(v),
-      M_reaction: valeur(t),
+      ...brutes[k],
       M_gauche: gauche === null ? null : momentFlechissant(gauche, Lg),
       M_droite: droite === null ? null : momentFlechissant(droite, 0),
       V_gauche: gauche === null ? null : effortTranchant(gauche, Lg),
       V_droite: droite === null ? null : effortTranchant(droite, 0),
-      w: -u[v] * MM_PAR_M,
-      rotation: u[t] * MM_PAR_M,
     };
   });
 
@@ -363,13 +400,6 @@ export function calculerPoutre(poutre: Poutre): ResultatPoutre {
     // cote d'un appui appartient a la travee voisine.
     ...extremesDe(courbes.filter((_, e) => troncons[e].x0 >= x0 - TOLERANCE_X && troncons[e].x1 <= x1 + TOLERANCE_X).flat()),
   }));
-
-  let charges = 0;
-  for (const c of poutre.charges) {
-    if (c.type === 'ponctuelle') charges += c.P;
-    if (c.type === 'repartie') charges += c.q * (c.b - c.a);
-    if (c.type === 'lineaire') charges += ((c.q_a + c.q_b) / 2) * (c.b - c.a);
-  }
 
   return {
     poutre,

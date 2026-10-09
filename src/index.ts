@@ -18,3 +18,7 @@ export {
   type Troncon,
 } from './calcul';
 export { resoudre, MatriceSinguliere } from './algebre';
+export { assemblerResultat, sommeDesCharges, abscissesDesNoeuds, type ReactionBrute } from './calcul';
+export * from './combinaisons';
+export * from './norms/profil';
+export * from './beton-arme';
