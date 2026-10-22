@@ -83,6 +83,7 @@ const formulaire = exige<HTMLFormElement>('#formulaire');
 const selecteurExemple = exige<HTMLSelectElement>('[data-role="exemple"]');
 const selecteurVue = exige<HTMLSelectElement>('[data-role="vue"]');
 const selecteurDisposition = exige<HTMLSelectElement>('[data-role="disposition"]');
+const selecteurDessin = exige<HTMLSelectElement>('[data-role="dessin-a-exporter"]');
 const fichier = exige<HTMLInputElement>('[data-role="ouvrir"]');
 const zones = {
   rigidite: exige<HTMLElement>('[data-role="rigidite"]'),
@@ -341,6 +342,12 @@ function calculer(): void {
     return echec(messageDErreur(e));
   }
   montrer(zones.erreurCalcul, null);
+  // La liste des dessins exportables suit le calcul : l'epure n'existe
+  // qu'avec le beton arme.
+  const choisi = selecteurDessin.value;
+  selecteurDessin.innerHTML = dessins(calcul)
+    .map(({ nom, titre }) => `<option value="${nom}"${nom === choisi ? ' selected' : ''}>${titre}</option>`)
+    .join('');
   peindreResultat(calcul);
   zones.corps.hidden = false;
 }
@@ -538,16 +545,16 @@ const HYPOTHESES = [
   'Signes : charges vers le bas positives ; M positif fibre inferieure tendue ; V = dM/dx ; fleche positive vers le bas ; moments appliques et de reaction positifs dans le sens trigonometrique.',
 ];
 
-function dessins(c: Calcul): { nom: string; svg: string }[] {
+function dessins(c: Calcul): { nom: string; titre: string; svg: string }[] {
   const L = c.poutre.longueur;
   const liste = [
-    { nom: 'schema', svg: dessinSchema(c.poutre) },
-    { nom: 'elu-moment', svg: dessinEnveloppe(c.comb.elu, L, 'M', `${c.comb.elu.combinaison.nom} — moment flechissant`) },
-    { nom: 'elu-effort-tranchant', svg: dessinEnveloppe(c.comb.elu, L, 'V', `${c.comb.elu.combinaison.nom} — effort tranchant`) },
-    { nom: 'els-fleche', svg: dessinEnveloppe(c.comb.caracteristique, L, 'w', `${c.comb.caracteristique.combinaison.nom} — fleche`) },
-    { nom: 'caracteristique-deformee', svg: dessinDiagramme(c.direct, 'w') },
+    { nom: 'schema', titre: 'Schema statique', svg: dessinSchema(c.poutre) },
+    { nom: 'elu-moment', titre: 'ELU — moment flechissant', svg: dessinEnveloppe(c.comb.elu, L, 'M', `${c.comb.elu.combinaison.nom} — moment flechissant`) },
+    { nom: 'elu-effort-tranchant', titre: 'ELU — effort tranchant', svg: dessinEnveloppe(c.comb.elu, L, 'V', `${c.comb.elu.combinaison.nom} — effort tranchant`) },
+    { nom: 'els-fleche', titre: 'ELS caracteristique — fleche', svg: dessinEnveloppe(c.comb.caracteristique, L, 'w', `${c.comb.caracteristique.combinaison.nom} — fleche`) },
+    { nom: 'caracteristique-deformee', titre: 'G + Q — deformee', svg: dessinDiagramme(c.direct, 'w') },
   ];
-  if (c.ba !== null) liste.push({ nom: 'epure', svg: dessinEpure(c.ba.resultat, L, c.ba.donnees.aciers) });
+  if (c.ba !== null) liste.push({ nom: 'epure', titre: 'Epure d arret des barres', svg: dessinEpure(c.ba.resultat, L, c.ba.donnees.aciers) });
   return liste;
 }
 
@@ -572,8 +579,11 @@ document.addEventListener('click', (evenement) => {
     return;
   }
   const c = calcul;
-  if (action === 'exporter-dessins') {
-    dessins(c).forEach(({ nom, svg }) => telecharger(`poutre-${nom}.svg`, svgAutonome(svg, STYLES_TRACE), 'image/svg+xml;charset=utf-8'));
+  // Un dessin par clic : plusieurs telechargements lances d'un meme clic, les
+  // navigateurs bloquent tous ceux qui suivent le premier.
+  if (action === 'exporter-dessin') {
+    const d = dessins(c).find((x) => x.nom === selecteurDessin.value);
+    if (d !== undefined) telecharger(`poutre-${d.nom}.svg`, svgAutonome(d.svg, STYLES_TRACE), 'image/svg+xml;charset=utf-8');
   } else if (action === 'exporter-resultats') {
     telecharger('poutre-resultats.csv', resultatsEnCsv([...blocsDEntree(c), ...blocsDeSortie(c)]), 'text/csv;charset=utf-8');
   } else if (action === 'exporter-valeurs') {
