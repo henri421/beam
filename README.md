@@ -2,8 +2,10 @@
 
 Réactions, moments fléchissants, efforts tranchants et déformée d'une poutre
 droite **continue ou hyperstatique** ; **enveloppes des combinaisons EN 1990**
-avec charges variables alternées ; et, en béton armé, **aciers nécessaires,
-épure d'arrêt des barres, effort tranchant et ancrages** (EN 1992-1-1:2004).
+avec charges variables alternées ; en béton armé, **aciers nécessaires,
+épure d'arrêt des barres, effort tranchant et ancrages** (EN 1992-1-1:2004) ;
+en acier, **résistance de section, déversement et flèche** de chaque travée
+(EN 1993-1-1, par sections-ec3).
 
 Fait partie de la suite [Aedificium web](https://henri421.github.io/WebAedificium/).
 Page publiée : <https://henri421.github.io/beam/>.
@@ -71,6 +73,24 @@ renforts), par appui (chapeaux) et filants hauts (montage).
   (§9.2.1.4(2)), 25 % des aciers de travée prolongés (§9.2.1.4(1),
   §9.2.1.5(1)), aciers supérieurs β₁ M_travée sur appui monolithique
   (§9.2.1.2(1)).
+
+## Acier
+
+Option « vérifier une poutre métallique », exclusive du béton armé. Profil en I laminé
+du catalogue de [sections-ec3](https://henri421.github.io/sections-ec3/) (IPE, HEA, HEB),
+nuance S235 à S460, dont le noyau est importé comme paquet.
+
+- **EI** tiré du profil (E = 210 000 MPa, I_y recalculé) ; **poids propre** du profil
+  ajouté aux charges G sur option.
+- Par zone (travée ou console), à l'ELU : M_Ed et V_Ed maximaux de l'enveloppe ;
+  **section** (§6.2, interaction M-V), **cisaillement** (§6.2.6), **déversement**
+  (§6.3.2) sur la longueur entre maintiens saisie, avec C₁ = 1 (moment uniforme, du
+  côté de la sécurité) ou un M_cr saisi ; ou déversement empêché.
+- À l'ELS : flèche maximale de l'enveloppe caractéristique comparée à L / n.
+- Taux **linéaires** sollicitation / résistance.
+
+Choix déclarés : M_Ed et V_Ed sont les maximums de la zone pris ensemble ; profils en I
+doublement symétriques, flexion autour de l'axe fort, sans effort normal.
 
 ## Ce que l'outil rend aussi
 

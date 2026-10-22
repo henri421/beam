@@ -29,6 +29,10 @@ import {
   type ResultatPoutre,
   type TypeAppui,
   type TypeCharge,
+  caracteristiquesProfil,
+  calculerAcier,
+  type DonneesAcier,
+  type ResultatAcier,
 } from '../../src/index';
 import {
   EXEMPLES,
@@ -47,11 +51,15 @@ import {
   type LigneAppui,
   type LigneCharge,
   type ModeleSaisie,
+  lignesAcier,
+  profilsEnI,
 } from './form';
 import { cote, dessinDiagramme, dessinEnveloppe, dessinEpure, dessinSchema } from './dessin';
 import {
   avertissementsEnveloppe,
+  blocsAcier,
   blocsBA,
+  tableauAcier,
   blocsEnveloppe,
   blocsResultats,
   messageDErreur,
@@ -106,7 +114,16 @@ const zones = {
   sectionBA: exige<HTMLElement>('#beton-arme'),
   baAvertissements: exige<HTMLElement>('[data-role="ba-avertissements"]'),
   baCorps: exige<HTMLElement>('[data-role="ba-corps"]'),
+  sectionAcier: exige<HTMLElement>('#acier'),
+  acierAvertissements: exige<HTMLElement>('[data-role="acier-avertissements"]'),
+  acierCorps: exige<HTMLElement>('[data-role="acier-corps"]'),
+  acierZones: exige<HTMLElement>('[data-role="acier-zones"]'),
 };
+
+// Liste des profils en I, par famille, une fois pour toutes.
+exige<HTMLSelectElement>('[data-role="profils"]').innerHTML = profilsEnI()
+  .map((f) => `<optgroup label="${f.famille}">${f.noms.map((n) => `<option value="${n}">${n}</option>`).join('')}</optgroup>`)
+  .join('');
 
 function montrer(el: HTMLElement, message: string | null): void {
   el.textContent = message ?? '';
@@ -127,6 +144,7 @@ interface Calcul {
   direct: ResultatPoutre;
   comb: ResultatCombinaisons;
   ba: { donnees: DonneesBA; resultat: ResultatBA } | null;
+  acier: { donnees: DonneesAcier; resultat: ResultatAcier } | null;
   modele: ModeleSaisie;
 }
 
@@ -165,17 +183,19 @@ function modeleSauvegarde(): ModeleSaisie | null {
 
 // --- Champs statiques ------------------------------------------------------------
 
-type Chemin = 'longueur' | 'E' | 'I' | `comb.${string}` | `ba.${string}`;
+type Chemin = 'longueur' | 'E' | 'I' | `comb.${string}` | `ba.${string}` | `acier.${string}`;
 
 function lireChemin(chemin: Chemin): string | boolean {
   if (chemin.startsWith('comb.')) return (modele.combinaisons as unknown as Record<string, string>)[chemin.slice(5)];
   if (chemin.startsWith('ba.')) return (modele.ba as unknown as Record<string, string | boolean>)[chemin.slice(3)];
+  if (chemin.startsWith('acier.')) return (modele.acier as unknown as Record<string, string | boolean>)[chemin.slice(6)];
   return modele[chemin as 'longueur' | 'E' | 'I'];
 }
 
 function ecrireChemin(chemin: Chemin, valeur: string | boolean): void {
   if (chemin.startsWith('comb.')) (modele.combinaisons as unknown as Record<string, unknown>)[chemin.slice(5)] = valeur;
   else if (chemin.startsWith('ba.')) (modele.ba as unknown as Record<string, unknown>)[chemin.slice(3)] = valeur;
+  else if (chemin.startsWith('acier.')) (modele.acier as unknown as Record<string, unknown>)[chemin.slice(6)] = valeur;
   else modele[chemin as 'longueur' | 'E' | 'I'] = String(valeur);
 }
 
@@ -194,6 +214,7 @@ function ecrireChampsStatiques(): void {
 function ajusterLesGroupes(): void {
   exige<HTMLElement>('[data-groupe="ba"]').hidden = !modele.ba.actif;
   exige<HTMLElement>('[data-groupe="te"]').hidden = modele.ba.forme !== 'te';
+  exige<HTMLElement>('[data-groupe="acier"]').hidden = !modele.acier.actif;
 }
 
 // --- Listes ----------------------------------------------------------------------
@@ -210,10 +231,11 @@ function rendreFerraillage(poutre: Poutre): void {
   const z = zonesDeChargement(poutre);
   const xs = poutre.appuis.map((a) => a.x);
   ajusterFerraillage(modele, z.length);
-  const signature = JSON.stringify([z, xs, modele.ba.actif]);
+  const signature = JSON.stringify([z, xs, modele.ba.actif, modele.acier.actif]);
   if (signature === signatureZones) return;
   signatureZones = signature;
-  zones.ferraillage.innerHTML = lignesFerraillage(modele, z, xs);
+  zones.ferraillage.innerHTML = modele.ba.actif ? lignesFerraillage(modele, z, xs) : '';
+  zones.acierZones.innerHTML = modele.acier.actif ? lignesAcier(modele, z) : '';
 }
 
 /** Schema et rigidite en direct ; une saisie incoherente est signalee sans effacer le schema. */
@@ -233,7 +255,14 @@ function rafraichirSchema(): void {
   }
   montrer(zones.erreurSaisie, null);
   zones.schema.innerHTML = dessinSchema(lecture.poutre);
-  if (modele.ba.actif) rendreFerraillage(lecture.poutre);
+  if (modele.ba.actif || modele.acier.actif) rendreFerraillage(lecture.poutre);
+  if (modele.acier.actif) {
+    try {
+      zones.rigidite.textContent = `EI = ${nombreFr(caracteristiquesProfil(modele.acier.profil).EI, 0)} kN·m² (profil ${modele.acier.profil})`;
+    } catch {
+      // Profil inconnu : le calcul le dira.
+    }
+  }
 }
 
 function apresModification(): void {
@@ -296,6 +325,13 @@ function peindreResultat(c: Calcul): void {
       zones.travees.innerHTML = tableauEnveloppeTravees(env, cas.zones);
     }
   }
+  if (c.acier === null) {
+    zones.sectionAcier.hidden = true;
+  } else {
+    zones.sectionAcier.hidden = false;
+    zones.acierAvertissements.innerHTML = alertes(c.acier.resultat.avertissements);
+    zones.acierCorps.innerHTML = tableauAcier(c.acier.resultat);
+  }
   if (c.ba === null) {
     zones.sectionBA.hidden = true;
   } else {
@@ -327,6 +363,7 @@ function calculer(): void {
     montrer(zones.erreurCalcul, message);
     zones.corps.hidden = true;
     zones.sectionBA.hidden = true;
+    zones.sectionAcier.hidden = true;
     calcul = null;
   };
   if (!lecture.ok) return echec(lecture.message);
@@ -337,7 +374,11 @@ function calculer(): void {
       lecture.ba === null
         ? null
         : { donnees: lecture.ba, resultat: calculerBetonArme(comb.casELU, comb.elu, lecture.ba, PROFIL, lecture.combinaisons.redistribution) };
-    calcul = { poutre: lecture.poutre, direct, comb, ba, modele: structuredClone(modele) };
+    const acier =
+      lecture.acier === null
+        ? null
+        : { donnees: lecture.acier, resultat: calculerAcier(comb.cas.zones, comb.elu, comb.caracteristique, lecture.acier) };
+    calcul = { poutre: lecture.poutre, direct, comb, ba, acier, modele: structuredClone(modele) };
   } catch (e) {
     return echec(messageDErreur(e));
   }
@@ -376,6 +417,7 @@ formulaire.addEventListener('input', (evenement) => {
   else if (liste === 'charges') modele.charges[i][champ as Exclude<keyof LigneCharge, 'type' | 'cas'>] = el.value;
   else if (liste === 'ferraillage') modele.ba.zones[i][champ as 'filants' | 'renforts'] = el.value;
   else if (liste === 'chapeaux') modele.ba.chapeaux[i] = el.value;
+  else if (liste === 'acier') modele.acier.zones[i][champ as 'L_LT' | 'Mcr'] = el.value;
   apresModification();
 });
 
@@ -383,7 +425,7 @@ formulaire.addEventListener('change', (evenement) => {
   const el = evenement.target;
   if (el instanceof HTMLInputElement && el.type === 'checkbox' && el.dataset.champ !== undefined) {
     ecrireChemin(el.dataset.champ as Chemin, el.checked);
-    if (el.dataset.champ === 'ba.actif') rendreLesListes();
+    if (el.dataset.champ === 'ba.actif' || el.dataset.champ === 'acier.actif') rendreLesListes();
     apresModification();
     return;
   }
@@ -520,6 +562,21 @@ function blocsDEntree(c: Calcul): BlocResultat[] {
       note: `Profil : ${PROFIL.nom} (${PROFIL.date}).`,
     },
   ];
+  if (c.acier !== null) {
+    const a = c.acier.donnees;
+    const p = c.acier.resultat.profil;
+    blocs.push({
+      titre: 'Acier',
+      lignes: [
+        { symbole: 'profil', libelle: 'profil en I lamine, catalogue de sections-ec3', valeur: `${p.nom}, ${a.nuance}` },
+        { symbole: 'EI', libelle: 'E = 210 000 MPa, I_y du profil (remplace E et I saisis)', valeur: `${nombreFr(p.EI, 0)} kN.m2` },
+        { symbole: 'g', libelle: 'poids propre du profil', valeur: c.modele.acier.poidsPropre ? `${nombreFr(p.poids, 3)} kN/m, ajoute aux charges G` : 'non ajoute' },
+        { symbole: 'deversement', libelle: 'maintien de la membrure comprimee', valeur: a.deversementEmpeche ? 'empeche' : 'longueurs entre maintiens par zone' },
+        { symbole: 'L / n', libelle: 'fleche limite', valeur: `L / ${a.flecheLimite}` },
+      ],
+      note: null,
+    });
+  }
   if (c.ba !== null) {
     const s = c.ba.donnees.section;
     blocs.push({
@@ -543,6 +600,7 @@ const HYPOTHESES = [
   'Une seule action variable Q ; appuis bilateraux, un soulevement est signale et rendu tel quel.',
   'Beton arme : flexion simple (section-uls, parabole-rectangle) ; x_u/d limite par le §5.5(4), delta = 1 hors redistribution ; effort tranchant §6.2 cadres droits, z = 0,9 d ; epure decalee de a_l (§9.2.1.3) ; l_bd avec alpha = 1 et sigma_sd = f_yd (dispositions-constructives).',
   'Signes : charges vers le bas positives ; M positif fibre inferieure tendue ; V = dM/dx ; fleche positive vers le bas ; moments appliques et de reaction positifs dans le sens trigonometrique.',
+  'Acier (si retenu) : EN 1993-1-1 par sections-ec3 ; par zone, M_Ed et V_Ed maximaux pris ensemble ; deversement avec C1 = 1 ou M_cr saisi ; fleche de l enveloppe caracteristique comparee a L / n ; EI du profil, E = 210 000 MPa.',
 ];
 
 function dessins(c: Calcul): { nom: string; titre: string; svg: string }[] {
@@ -566,6 +624,7 @@ function blocsDeSortie(c: Calcul): BlocResultat[] {
     ...blocsEnveloppe(c.comb.caracteristique, z),
     ...blocsEnveloppe(c.comb.quasiPermanente, z),
     ...(c.ba === null ? [] : blocsBA(c.ba.resultat, c.ba.donnees.aciers)),
+    ...(c.acier === null ? [] : blocsAcier(c.acier.resultat)),
   ];
 }
 
@@ -594,6 +653,7 @@ document.addEventListener('click', (evenement) => {
       ...c.comb.avertissements,
       ...avertissementsEnveloppe(c.comb.elu),
       ...(c.ba === null ? [] : c.ba.resultat.avertissements),
+      ...(c.acier === null ? [] : c.acier.resultat.avertissements),
     ];
     const html = noteDeCalculHtml(
       {

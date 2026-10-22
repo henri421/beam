@@ -7,7 +7,9 @@
  */
 
 import { echapper, lireNombre } from 'aedificium-ui';
+import { familles, type Nuance } from 'sections-ec3';
 import {
+  caracteristiquesProfil,
   LIBELLES_APPUI,
   LIBELLES_CAS,
   LIBELLES_CHARGE,
@@ -17,6 +19,7 @@ import {
   type Appui,
   type CasDeCharge,
   type Charge,
+  type DonneesAcier,
   type DonneesBA,
   type DonneesCombinaisons,
   type Formule,
@@ -81,6 +84,21 @@ export interface SaisieBA {
   chapeaux: string[];
 }
 
+export interface SaisieAcier {
+  actif: boolean;
+  /** Profil en I du catalogue de sections-ec3. */
+  profil: string;
+  nuance: Nuance;
+  /** Deversement empeche sur toute la poutre. */
+  empeche: boolean;
+  /** n de la fleche limite L / n. */
+  flecheLimite: string;
+  /** Ajoute le poids propre du profil aux charges G. */
+  poidsPropre: boolean;
+  /** Par zone : longueur entre maintiens (m, vide = longueur de la zone) et M_cr saisi (kN.m, vide = C1 = 1). */
+  zones: { L_LT: string; Mcr: string }[];
+}
+
 export interface ModeleSaisie {
   longueur: string;
   E: string;
@@ -90,6 +108,20 @@ export interface ModeleSaisie {
   charges: LigneCharge[];
   combinaisons: SaisieCombinaisons;
   ba: SaisieBA;
+  acier: SaisieAcier;
+}
+
+export const NUANCES: readonly Nuance[] = ['S235', 'S275', 'S355', 'S420', 'S460'];
+
+/** Les profils en I lamines du catalogue, par famille. */
+export function profilsEnI(): { famille: string; noms: string[] }[] {
+  return familles()
+    .filter((f) => f.type === 'I-lamine')
+    .map((f) => ({ famille: f.famille, noms: f.noms }));
+}
+
+export function acierParDefaut(): SaisieAcier {
+  return { actif: false, profil: 'IPE 300', nuance: 'S235', empeche: false, flecheLimite: '300', poidsPropre: true, zones: [] };
 }
 
 export function combinaisonsParDefaut(): SaisieCombinaisons {
@@ -140,8 +172,8 @@ function charge(partiel: Partial<LigneCharge> & { type: TypeCharge }): LigneChar
   return { cas: 'G', x: '', P: '', M: '', a: '', b: '', q: '', q_a: '', q_b: '', ...partiel };
 }
 
-function exemple(m: Omit<ModeleSaisie, 'combinaisons' | 'ba'> & { ba?: Partial<SaisieBA> }): ModeleSaisie {
-  return { ...m, combinaisons: combinaisonsParDefaut(), ba: { ...baParDefaut(), ...m.ba } };
+function exemple(m: Omit<ModeleSaisie, 'combinaisons' | 'ba' | 'acier'> & { ba?: Partial<SaisieBA>; acier?: Partial<SaisieAcier> }): ModeleSaisie {
+  return { ...m, combinaisons: combinaisonsParDefaut(), ba: { ...baParDefaut(), ...m.ba }, acier: { ...acierParDefaut(), ...m.acier } };
 }
 
 // --- Exemples ---------------------------------------------------------------------
@@ -337,13 +369,26 @@ export function poutreDepuisModele(m: ModeleSaisie): Lecture {
 export function ajusterFerraillage(m: ModeleSaisie, nbZones: number): void {
   while (m.ba.zones.length < nbZones) m.ba.zones.push({ filants: '', renforts: '' });
   m.ba.zones.length = nbZones;
+  while (m.acier.zones.length < nbZones) m.acier.zones.push({ L_LT: '', Mcr: '' });
+  m.acier.zones.length = nbZones;
   while (m.ba.chapeaux.length < m.appuis.length) m.ba.chapeaux.push('');
   m.ba.chapeaux.length = m.appuis.length;
 }
 
 export type LectureComplete =
-  | { ok: true; poutre: Poutre; combinaisons: DonneesCombinaisons; ba: DonneesBA | null }
+  | { ok: true; poutre: Poutre; combinaisons: DonneesCombinaisons; ba: DonneesBA | null; acier: DonneesAcier | null }
   | { ok: false; message: string };
+
+/**
+ * Poutre en acier : EI tire du profil (E = 210 000 MPa, I_y), et poids propre
+ * ajoute aux charges G sur toute la longueur si demande. Les champs E et I de
+ * la saisie sont alors ignores.
+ */
+function poutreAcier(p: Poutre, a: SaisieAcier): Poutre {
+  const c = caracteristiquesProfil(a.profil);
+  const charges: Charge[] = a.poidsPropre ? [...p.charges, { type: 'repartie', a: 0, b: p.longueur, q: c.poids, cas: 'G' }] : p.charges;
+  return { ...p, EI: c.EI, charges };
+}
 
 /**
  * Toutes les donnees du calcul : poutre, combinaisons et, si le beton arme
@@ -362,7 +407,28 @@ export function donneesDepuisModele(m: ModeleSaisie): LectureComplete {
       gamma_T: nombre(c.gamma_T, 'gamma des tassements'),
       redistribution: m.ba.actif ? m.appuis.map((a, i) => (a.delta.trim() === '' ? 1 : nombre(a.delta, `Appui ${i + 1}, delta`))) : m.appuis.map(() => 1),
     };
-    if (!m.ba.actif) return { ok: true, poutre: lecture.poutre, combinaisons, ba: null };
+    if (m.ba.actif && m.acier.actif) throw new SaisieInvalide('Choisir beton arme OU acier, pas les deux.');
+    if (m.acier.actif) {
+      const a = m.acier;
+      ajusterFerraillage(m, zonesDeChargement(lecture.poutre).length);
+      const optionnel = (t: string, quoi: string): number | null => (t.trim() === '' ? null : nombre(t, quoi));
+      let poutre: Poutre;
+      try {
+        poutre = poutreAcier(lecture.poutre, a);
+      } catch (e) {
+        throw new SaisieInvalide(`Profil ${a.profil} : ${e instanceof Error ? e.message : String(e)}`);
+      }
+      const acier: DonneesAcier = {
+        profil: a.profil,
+        nuance: a.nuance,
+        L_LT: a.zones.map((z, j) => optionnel(z.L_LT, `Zone ${j + 1}, longueur entre maintiens`)),
+        Mcr: a.zones.map((z, j) => optionnel(z.Mcr, `Zone ${j + 1}, M_cr`)),
+        deversementEmpeche: a.empeche,
+        flecheLimite: nombre(a.flecheLimite, 'Fleche limite L / n'),
+      };
+      return { ok: true, poutre, combinaisons, ba: null, acier };
+    }
+    if (!m.ba.actif) return { ok: true, poutre: lecture.poutre, combinaisons, ba: null, acier: null };
     const b = m.ba;
     const nbZones = zonesDeChargement(lecture.poutre).length;
     ajusterFerraillage(m, nbZones);
@@ -396,7 +462,7 @@ export function donneesDepuisModele(m: ModeleSaisie): LectureComplete {
         montage: lit(b.montage, 'Aciers de montage'),
       },
     };
-    return { ok: true, poutre: lecture.poutre, combinaisons, ba };
+    return { ok: true, poutre: lecture.poutre, combinaisons, ba, acier: null };
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : String(e) };
   }
@@ -501,6 +567,23 @@ export function lignesFerraillage(m: ModeleSaisie, zones: { nom: string; x0: num
   return z + a;
 }
 
+/** Lignes de la poutre en acier : par zone, longueur entre maintiens et M_cr facultatif. */
+export function lignesAcier(m: ModeleSaisie, zones: { nom: string; x0: number; x1: number }[]): string {
+  const champ = (j: number, nom: string, lib: string, valeur: string, indication: string): string =>
+    `<label class="champ"><span>${lib}</span><input type="text" inputmode="decimal" data-liste="acier" data-index="${j}" data-champ="${nom}" ` +
+    `value="${echapper(valeur)}" placeholder="${echapper(indication)}" /></label>`;
+  return zones
+    .map(
+      (zone, j) =>
+        `<div class="ligne"><div class="ligne-tete"><span class="ligne-num">${echapper(zone.nom)}</span>` +
+        `<span class="ligne-type">${zone.x0} – ${zone.x1} m</span></div><div class="ligne-champs">` +
+        champ(j, 'L_LT', 'L entre maintiens (m)', m.acier.zones[j]?.L_LT ?? '', String(zone.x1 - zone.x0)) +
+        champ(j, 'Mcr', 'M_cr (kN.m)', m.acier.zones[j]?.Mcr ?? '', 'C1 = 1') +
+        `</div></div>`
+    )
+    .join('');
+}
+
 // --- Fichier de modele -------------------------------------------------------------
 
 export const FORMAT_FICHIER = 'poutres-continues';
@@ -562,6 +645,9 @@ export function modeleDepuisJson(contenu: string): ModeleSaisie {
   const c = objet(m.combinaisons);
   const bDef = baParDefaut();
   const b = objet(m.ba);
+  // Fichier anterieur a l'option acier : bloc absent, acier inactif.
+  const aDef = acierParDefaut();
+  const ac = objet(m.acier);
   const t = (v: unknown, def: string): string => (v === undefined ? def : texte(v));
   return {
     longueur: texte(m.longueur),
@@ -598,6 +684,15 @@ export function modeleDepuisJson(contenu: string): ModeleSaisie {
       montage: t(b.montage, bDef.montage),
       zones: tableau(b.zones).map((z) => ({ filants: texte(z.filants), renforts: texte(z.renforts) })),
       chapeaux: Array.isArray(b.chapeaux) ? b.chapeaux.map(texte) : [],
+    },
+    acier: {
+      actif: ac.actif === true,
+      profil: typeof ac.profil === 'string' && ac.profil !== '' ? ac.profil : aDef.profil,
+      nuance: NUANCES.includes(ac.nuance as Nuance) ? (ac.nuance as Nuance) : aDef.nuance,
+      empeche: ac.empeche === true,
+      flecheLimite: t(ac.flecheLimite, aDef.flecheLimite),
+      poidsPropre: ac.poidsPropre !== false,
+      zones: tableau(ac.zones).map((z) => ({ L_LT: texte(z.L_LT), Mcr: texte(z.Mcr) })),
     },
   };
 }

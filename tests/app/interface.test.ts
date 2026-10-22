@@ -147,3 +147,38 @@ describe('traces et sorties', () => {
     expect(html).toContain('constate, il ne prescrit pas');
   });
 });
+
+describe('option acier', () => {
+  it('EI tire du profil, poids propre ajoute aux charges G', async () => {
+    const { donneesDepuisModele, modeleParDefaut } = await import('../../app/src/form');
+    const m = modeleParDefaut();
+    m.ba.actif = false;
+    m.acier = { ...m.acier, actif: true, profil: 'IPE 300', poidsPropre: true };
+    const l = donneesDepuisModele(m);
+    if (!l.ok) throw new Error(l.message);
+    // IPE 300 : I_y = 8356 cm4 -> EI = 210 000 × 8,356e7 / 1e9 = 17 548 kN.m2 (a 0,5 % pres).
+    expect(l.poutre.EI).toBeGreaterThan(17548 * 0.995);
+    expect(l.poutre.EI).toBeLessThan(17548 * 1.005);
+    const g = l.poutre.charges[l.poutre.charges.length - 1];
+    expect(g.type === 'repartie' && g.cas === 'G' && g.q).toBeCloseTo(0.4224, 2);
+    expect(l.acier?.profil).toBe('IPE 300');
+  });
+
+  it('beton arme et acier sont exclusifs', async () => {
+    const { donneesDepuisModele, modeleParDefaut } = await import('../../app/src/form');
+    const m = modeleParDefaut();
+    m.ba.actif = true;
+    m.acier.actif = true;
+    const l = donneesDepuisModele(m);
+    expect(!l.ok && l.message).toMatch(/OU acier/);
+  });
+
+  it('un fichier sans bloc acier se relit, acier inactif', async () => {
+    const { modeleDepuisJson, modeleEnJson, modeleParDefaut } = await import('../../app/src/form');
+    const m = modeleParDefaut() as unknown as Record<string, unknown>;
+    delete m.acier;
+    const relu = modeleDepuisJson(modeleEnJson(m as never));
+    expect(relu.acier.actif).toBe(false);
+    expect(relu.acier.profil).toBe('IPE 300');
+  });
+});

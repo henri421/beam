@@ -140,6 +140,32 @@
             </div>
           </fieldset>
 
+          <fieldset>
+            <legend>Acier &middot; EN 1993-1-1</legend>
+            <label class="case"><input type="checkbox" data-champ="acier.actif" /><span>verifier une poutre metallique</span></label>
+            <div class="groupe" data-groupe="acier">
+              <label><span>Profil</span><select data-champ="acier.profil" data-role="profils"></select></label>
+              <label><span>Nuance</span>
+                <select data-champ="acier.nuance">
+                  <option value="S235">S235</option>
+                  <option value="S275">S275</option>
+                  <option value="S355">S355</option>
+                  <option value="S420">S420</option>
+                  <option value="S460">S460</option>
+                </select>
+              </label>
+              <label class="case"><input type="checkbox" data-champ="acier.poidsPropre" /><span>ajouter le poids propre du profil aux charges G</span></label>
+              <label class="case"><input type="checkbox" data-champ="acier.empeche" /><span>deversement empeche (maintien continu de la membrure comprimee)</span></label>
+              <label><span>Fleche limite L / n, n =</span><input type="text" inputmode="decimal" data-champ="acier.flecheLimite" /></label>
+              <p class="note">
+                EI est tire du profil (E = 210 000 MPa, I<sub>y</sub>) : les champs E et I ci-dessus sont ignores. Par zone,
+                la longueur entre maintiens lateraux (vide : longueur de la zone) et, si on l'a calcule par ailleurs,
+                M<sub>cr</sub> ; sinon M<sub>cr</sub> est pris avec C<sub>1</sub> = 1, du cote de la securite.
+              </p>
+              <div data-role="acier-zones"></div>
+            </div>
+          </fieldset>
+
           <p data-role="erreur-saisie" class="erreur" role="alert" hidden></p>
           <div class="boutons boutons-calcul">
             <button type="submit" class="principal">Calculer</button>
@@ -188,6 +214,12 @@
           <h2>Beton arme &middot; ELU</h2>
           <div data-role="ba-avertissements"></div>
           <div data-role="ba-corps"></div>
+        </section>
+
+        <section id="acier" aria-label="acier" hidden>
+          <h2>Acier &middot; ELU et ELS</h2>
+          <div data-role="acier-avertissements"></div>
+          <div data-role="acier-corps"></div>
         </section>
 
         <section id="sorties" aria-label="sorties">

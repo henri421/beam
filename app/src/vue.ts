@@ -19,6 +19,7 @@ import {
   type ResultatBA,
   type ResultatPoutre,
   type Zone,
+  type ResultatAcier,
 } from '../../src/index';
 import { cote } from './dessin';
 
@@ -417,6 +418,75 @@ export function blocsBA(ba: ResultatBA, aciers: AciersChoisis): BlocResultat[] {
         }))
       ),
       note: null,
+    },
+  ];
+}
+
+// --- Acier --------------------------------------------------------------------------
+
+const VERDICTS_ACIER = { conforme: 'Conforme', 'non-conforme': 'Non conforme', incomplet: 'Verification incomplete' } as const;
+
+function celluleTaux(t: number | null): string {
+  if (t === null) return '<td class="valeur">—</td>';
+  return `<td class="valeur${t <= 1 ? ' ok' : ' refus'}">${tauxFr(t)}</td>`;
+}
+
+/**
+ * Tableau de la poutre en acier, zone par zone. L'ecran et la note le
+ * rendent tel quel ; le CSV lit `blocsAcier`, les memes grandeurs.
+ */
+export function tableauAcier(r: ResultatAcier): string {
+  const c = r.profil;
+  const lignes = r.zones
+    .map(
+      (z) =>
+        `<tr><td>${echapper(z.zone.nom)}</td><td class="valeur">${nombreFr(z.M_Ed, 1)}</td><td class="valeur">${nombreFr(z.V_Ed, 1)}</td>` +
+        `<td class="valeur">${z.element === null ? '—' : z.element.classification.classe}</td>` +
+        celluleTaux(z.tauxSection) +
+        celluleTaux(z.tauxCisaillement) +
+        `<td class="valeur">${nombreFr(z.L_LT, 2)}</td>` +
+        celluleTaux(z.tauxDeversement) +
+        `<td class="valeur">${nombreFr(z.w, 1)} / ${nombreFr(z.w_lim, 1)}</td>` +
+        celluleTaux(z.tauxFleche) +
+        '</tr>' +
+        (z.erreur === null ? '' : `<tr><td></td><td colspan="9" class="refus">${echapper(z.erreur)}</td></tr>`)
+    )
+    .join('');
+  return (
+    `<p class="verdict verdict-${r.verdict}">${VERDICTS_ACIER[r.verdict]}</p>` +
+    `<p class="note">${echapper(c.nom)} : A = ${nombreFr(c.A / 100, 1)} cm², I<sub>y</sub> = ${nombreFr(c.Iy / 1e4, 0)} cm⁴, ` +
+    `poids propre ${nombreFr(c.poids, 3)} kN/m, EI = ${nombreFr(c.EI, 0)} kN·m².</p>` +
+    '<div class="defilement"><table class="tableau"><thead><tr><th>zone</th><th>M<sub>Ed</sub> (kN.m)</th><th>V<sub>Ed</sub> (kN)</th><th>classe</th>' +
+    '<th>M<sub>Ed</sub> / M<sub>y,V,Rd</sub></th><th>V<sub>Ed</sub> / V<sub>pl,Rd</sub></th><th>L<sub>LT</sub> (m)</th><th>M<sub>Ed</sub> / M<sub>b,Rd</sub></th>' +
+    `<th>w / w<sub>lim</sub> (mm)</th><th>fleche</th></tr></thead><tbody>${lignes}</tbody></table></div>` +
+    '<p class="note">ELU : EN 1993-1-1 §6.2 (section, interaction M-V) et §6.3.2 (deversement), par sections-ec3. ' +
+    'ELS : fleche de l enveloppe caracteristique, limite L / n saisie. Taux lineaires sollicitation / resistance.</p>'
+  );
+}
+
+/** Blocs du CSV et de la note : une ligne par grandeur et par zone. */
+export function blocsAcier(r: ResultatAcier): BlocResultat[] {
+  const t = (x: number | null) => (x === null ? '—' : tauxFr(x));
+  return [
+    ...r.zones.map((z) => ({
+      titre: `Acier — ${z.zone.nom}`,
+      lignes: [
+        { symbole: 'M_Ed', libelle: 'moment maximal en valeur absolue, ELU', valeur: `${nombreFr(z.M_Ed, 2)} kN.m` },
+        { symbole: 'V_Ed', libelle: 'effort tranchant maximal, ELU', valeur: `${nombreFr(z.V_Ed, 2)} kN` },
+        { symbole: 'classe', libelle: 'classe de section', valeur: z.element === null ? '—' : String(z.element.classification.classe) },
+        { symbole: 'M_Ed / M_y,V,Rd', libelle: 'section, §6.2.5 et §6.2.8', valeur: t(z.tauxSection) },
+        { symbole: 'V_Ed / V_pl,Rd', libelle: 'cisaillement, §6.2.6', valeur: t(z.tauxCisaillement) },
+        { symbole: 'L_LT', libelle: 'longueur entre maintiens', valeur: `${nombreFr(z.L_LT, 2)} m` },
+        { symbole: 'M_Ed / M_b,Rd', libelle: 'deversement, §6.3.2', valeur: t(z.tauxDeversement) },
+        { symbole: 'w / w_lim', libelle: 'fleche caracteristique', valeur: `${nombreFr(z.w, 1)} / ${nombreFr(z.w_lim, 1)} mm` },
+        { symbole: 'taux fleche', libelle: 'w / w_lim', valeur: t(z.tauxFleche) },
+      ],
+      note: z.erreur,
+    })),
+    {
+      titre: 'Acier — verdict',
+      lignes: [{ symbole: 'constat', libelle: 'verdict', valeur: VERDICTS_ACIER[r.verdict] }],
+      note: r.avertissements.join(' '),
     },
   ];
 }

@@ -596,3 +596,17 @@ svg .barre { stroke: var(--traction); stroke-width: 2.4; stroke-linecap: round; 
 [data-role='choix-disposition'][hidden] {
   display: none;
 }
+
+/* --- Acier : verdict ------------------------------------------------------ */
+
+.verdict {
+  margin: 0 0 0.5rem;
+  padding: 0.5rem 0.8rem;
+  border-left: 3px solid;
+  border-radius: var(--rayon);
+  font-weight: 600;
+}
+
+.verdict-conforme { border-color: var(--ok); background: var(--ok-fond); color: var(--ok); }
+.verdict-non-conforme { border-color: var(--refus); background: var(--refus-fond); color: var(--refus); }
+.verdict-incomplet { border-color: var(--alerte); background: var(--alerte-fond); color: var(--alerte); }

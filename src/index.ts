@@ -22,3 +22,4 @@ export { assemblerResultat, sommeDesCharges, abscissesDesNoeuds, type ReactionBr
 export * from './combinaisons';
 export * from './norms/profil';
 export * from './beton-arme';
+export * from './acier';
