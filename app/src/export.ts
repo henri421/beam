@@ -5,7 +5,7 @@
  * `aedificium-ui` (`telecharger`, `ouvrirOuTelecharger`).
  */
 
-import { JETONS, echapper, type BlocResultat } from 'aedificium-ui';
+import { JETONS, notationHtml, type BlocResultat } from 'aedificium-ui';
 
 /**
  * Styles du trace, jetons compris : un document exporte ne voit pas la
@@ -93,13 +93,13 @@ function tableDuBloc(bloc: BlocResultat): string {
   const lignes = bloc.lignes
     .map(
       (l) =>
-        `<tr><td class="sym">${echapper(l.symbole)}</td><td class="lib">${echapper(l.libelle)}</td><td class="val">${echapper(l.valeur)}</td></tr>`
+        `<tr><td class="sym">${notationHtml(l.symbole)}</td><td class="lib">${notationHtml(l.libelle)}</td><td class="val">${notationHtml(l.valeur)}</td></tr>`
     )
     .join('');
   const table = lignes === '' ? '' : `<table>${lignes}</table>`;
   // Le motif est rendu MEME sans ligne : c'est le cas ou il porte toute l'information.
-  const note = bloc.note === null ? '' : `<p class="note">${echapper(bloc.note)}</p>`;
-  return `<h3>${echapper(bloc.titre)}</h3>${table}${note}`;
+  const note = bloc.note === null ? '' : `<p class="note">${notationHtml(bloc.note)}</p>`;
+  return `<h3>${notationHtml(bloc.titre)}</h3>${table}${note}`;
 }
 
 /**
@@ -107,19 +107,19 @@ function tableDuBloc(bloc: BlocResultat): string {
  * diagrammes, reactions et extremums par travee.
  */
 export function noteDeCalculHtml(note: NoteDeCalcul, styles: string): string {
-  const avertissements = note.avertissements.map((a) => `<p class="avertissement">${echapper(a)}</p>`).join('');
+  const avertissements = note.avertissements.map((a) => `<p class="avertissement">${notationHtml(a)}</p>`).join('');
   const dessins = note.dessins.map((svg) => `<div class="dessin">${svg}</div>`).join('');
   const hypotheses =
     note.hypotheses.length === 0
       ? ''
-      : `<h2>Hypotheses et limites</h2><ul>${note.hypotheses.map((h) => `<li>${echapper(h)}</li>`).join('')}</ul>`;
+      : `<h2>Hypotheses et limites</h2><ul>${note.hypotheses.map((h) => `<li>${notationHtml(h)}</li>`).join('')}</ul>`;
   return `<!doctype html>
 <html lang="fr"><head><meta charset="utf-8" />
-<title>Note de calcul — ${echapper(note.titre)}</title>
+<title>Note de calcul — ${notationHtml(note.titre)}</title>
 <style>${styles}${STYLE_NOTE}</style></head>
 <body>
 <h1>Note de calcul — poutre continue, calcul elastique lineaire</h1>
-<p class="date">${echapper(note.titre)} · ${echapper(note.date)}</p>
+<p class="date">${notationHtml(note.titre)} · ${notationHtml(note.date)}</p>
 ${avertissements}
 <h2>Donnees d entree</h2>${note.entrees.map(tableDuBloc).join('')}
 <h2>Schema et diagrammes</h2>${dessins}

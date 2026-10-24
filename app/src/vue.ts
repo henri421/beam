@@ -4,7 +4,7 @@
  * Tout ici est PUR — aucun `document`.
  */
 
-import { echapper, nombreFr, tauxFr, type BlocResultat } from 'aedificium-ui';
+import { notationHtml, notationTexte, nombreFr, tauxFr, type BlocResultat } from 'aedificium-ui';
 import {
   LIBELLES_APPUI,
   libelleDisposition,
@@ -67,7 +67,7 @@ export function tableauReactions(r: ResultatPoutre): string {
     .map((re, i) => {
       const a = re.appui;
       return (
-        `<tr><td>A${i + 1}</td><td>${echapper(LIBELLES_APPUI[a.type])}</td><td class="valeur">${cote(a.x)}</td>` +
+        `<tr><td>A${i + 1}</td><td>${notationHtml(LIBELLES_APPUI[a.type])}</td><td class="valeur">${cote(a.x)}</td>` +
         `<td class="valeur">${retientLeDeplacement(a) ? kN(re.R) : '—'}</td>` +
         `<td class="valeur">${retientLaRotation(a) ? kN(re.M_reaction) : '—'}</td>` +
         `<td class="valeur">${momentSurAppui(re)}</td>` +
@@ -88,7 +88,7 @@ export function tableauTravees(r: ResultatPoutre): string {
   const lignes = r.travees
     .map(
       (t) =>
-        `<tr><td>${echapper(t.nom)}</td><td class="valeur">${cote(t.x0)} – ${cote(t.x1)}</td>` +
+        `<tr><td>${notationHtml(t.nom)}</td><td class="valeur">${cote(t.x0)} – ${cote(t.x1)}</td>` +
         `<td class="valeur">${kN(t.M_max.valeur)} <span class="clause">x=${cote(t.M_max.x)}</span></td>` +
         `<td class="valeur">${kN(t.M_min.valeur)} <span class="clause">x=${cote(t.M_min.x)}</span></td>` +
         `<td class="valeur">${kN(t.V_max.valeur)} <span class="clause">x=${cote(t.V_max.x)}</span></td>` +
@@ -147,7 +147,7 @@ export function blocsResultats(r: ResultatPoutre): BlocResultat[] {
 
 /** Valeurs echantillonnees le long de la poutre, pour un tableur (CSV). */
 export function valeursLeLongDeLaPoutre(r: ResultatPoutre): string[][] {
-  const lignes = [['x (m)', 'V (kN)', 'M (kN.m)', 'w (mm)']];
+  const lignes = [['x (m)', 'V (kN)', 'M (kN.m)', 'w (mm)'].map(notationTexte)];
   for (const c of r.courbes) {
     for (const p of c) lignes.push([nombreFr(p.x, 4), nombreFr(p.V, 3), nombreFr(p.M, 3), nombreFr(p.w, 4)]);
   }
@@ -157,7 +157,7 @@ export function valeursLeLongDeLaPoutre(r: ResultatPoutre): string[][] {
 // --- Enveloppes ------------------------------------------------------------------
 
 function dispo(env: Enveloppe, zones: Zone[], d: Determinant): string {
-  return `<span class="clause">${echapper(libelleDisposition(env, zones, d))}</span>`;
+  return `<span class="clause">${notationHtml(libelleDisposition(env, zones, d))}</span>`;
 }
 
 function cellule(d: Determinant, env: Enveloppe, zones: Zone[], dec = 2): string {
@@ -169,7 +169,7 @@ export function tableauEnveloppeTravees(env: Enveloppe, zones: Zone[]): string {
   const lignes = env.travees
     .map(
       (t) =>
-        `<tr><td>${echapper(t.nom)}</td>` +
+        `<tr><td>${notationHtml(t.nom)}</td>` +
         cellule(t.M_max, env, zones) +
         cellule(t.M_min, env, zones) +
         cellule(t.V_max, env, zones) +
@@ -202,8 +202,8 @@ export function tableauEnveloppeAppuis(env: Enveloppe, zones: Zone[]): string {
 }
 
 export function resumeEnveloppe(env: Enveloppe): string {
-  const v = env.combinaison.variantes.map((x) => `<li>${echapper(x.nom)}</li>`).join('');
-  return `<p class="note">${echapper(env.combinaison.nom)}, variantes de coefficients combinees a Q placee travee par travee :</p><ul class="variantes">${v}</ul>`;
+  const v = env.combinaison.variantes.map((x) => `<li>${notationHtml(x.nom)}</li>`).join('');
+  return `<p class="note">${notationHtml(env.combinaison.nom)}, variantes de coefficients combinees a Q placee travee par travee :</p><ul class="variantes">${v}</ul>`;
 }
 
 /** Soulevement : reaction minimale negative. */
@@ -251,14 +251,14 @@ export function blocsEnveloppe(env: Enveloppe, zones: Zone[]): BlocResultat[] {
 const mm2 = (v: number | null): string => (v === null ? '—' : nombreFr(v, 0));
 
 function ligneFlexion(nom: string, f: Flexion | null, lit: string): string {
-  if (f === null) return `<tr><td>${echapper(nom)}</td><td class="valeur" colspan="8">pas de moment de ce signe</td></tr>`;
+  if (f === null) return `<tr><td>${notationHtml(nom)}</td><td class="valeur" colspan="8">pas de moment de ce signe</td></tr>`;
   const taux = f.M_Rd === null ? '—' : tauxFr(f.M_Ed / f.M_Rd);
   const classe = f.M_Rd === null ? '' : f.M_Ed <= f.M_Rd ? ' ok' : ' refus';
   const As = f.As2_req > 0 ? `${mm2(f.As_req)} + ${mm2(f.As2_req)} comp.` : mm2(f.As_req);
   return (
-    `<tr><td>${echapper(nom)}</td><td class="valeur">${nombreFr(f.M_Ed, 2)}</td><td class="valeur">${As}</td>` +
+    `<tr><td>${notationHtml(nom)}</td><td class="valeur">${nombreFr(f.M_Ed, 2)}</td><td class="valeur">${As}</td>` +
     `<td class="valeur">${mm2(f.As_min)}</td><td class="valeur">${nombreFr(f.xu_d_req, 3)} &le; ${nombreFr(f.xu_d_limite, 3)}</td>` +
-    `<td>${echapper(lit)}</td><td class="valeur">${mm2(f.As_prov)}</td><td class="valeur">${f.M_Rd === null ? '—' : nombreFr(f.M_Rd, 2)}</td>` +
+    `<td>${notationHtml(lit)}</td><td class="valeur">${mm2(f.As_prov)}</td><td class="valeur">${f.M_Rd === null ? '—' : nombreFr(f.M_Rd, 2)}</td>` +
     `<td class="valeur${classe}">${taux}</td></tr>`
   );
 }
@@ -291,7 +291,7 @@ export function tableauBAArrets(ba: ResultatBA): string {
   for (const z of ba.zones) {
     const r = z.renforts;
     lignes.push(
-      `<tr><td>${echapper(z.zone.nom)} &middot; renforts bas</td>` +
+      `<tr><td>${notationHtml(z.zone.nom)} &middot; renforts bas</td>` +
         (r === null
           ? `<td colspan="4">non necessaires : les filants couvrent l'epure (M<sub>Rd</sub> = ${nombreFr(z.M_Rd_filants, 2)} kN·m)</td>`
           : `<td class="valeur">${cote(r.necessaire[0])} – ${cote(r.necessaire[1])}</td><td class="valeur">${cote(r.de)}</td><td class="valeur">${cote(r.a)}</td><td class="valeur">${cote(r.a - r.de)}</td>`) +
@@ -320,7 +320,7 @@ export function tableauBATranchant(ba: ResultatBA): string {
         const taux = t.V_Ed_reduit / t.V_Rd_s;
         const okBielles = t.V_Ed <= t.V_Rd_max;
         return (
-          `<tr><td>${echapper(z.zone.nom)}</td><td class="valeur">${cote(t.x)}</td><td class="valeur">${nombreFr(t.V_Ed, 1)}</td><td class="valeur">${nombreFr(t.V_Ed_reduit, 1)}</td>` +
+          `<tr><td>${notationHtml(z.zone.nom)}</td><td class="valeur">${cote(t.x)}</td><td class="valeur">${nombreFr(t.V_Ed, 1)}</td><td class="valeur">${nombreFr(t.V_Ed_reduit, 1)}</td>` +
           `<td class="valeur">${nombreFr(t.V_Rd_c, 1)}</td><td class="valeur${okBielles ? '' : ' refus'}">${nombreFr(t.V_Rd_max, 1)}</td>` +
           `<td class="valeur">${nombreFr(t.Asw_s_req, 3)}</td><td class="valeur">${nombreFr(t.Asw_s_prov, 3)}</td>` +
           `<td class="valeur">${nombreFr(t.V_Rd_s, 1)}</td><td class="valeur${taux <= 1 ? ' ok' : ' refus'}">${tauxFr(taux)}</td><td class="valeur">${nombreFr(t.s_max, 0)}</td></tr>`
@@ -330,9 +330,9 @@ export function tableauBATranchant(ba: ResultatBA): string {
     .join('');
   return (
     `<h3>Effort tranchant</h3><div class="defilement"><table class="tableau"><thead><tr><th>zone</th><th>appui x (m)</th><th>V<sub>Ed</sub> axe (kN)</th>` +
-    `<th>V<sub>Ed</sub> a d du nu</th><th>V<sub>Rd,c</sub></th><th>V<sub>Rd,max</sub></th><th>A<sub>sw</sub>/s req (mm²/mm)</th><th>A<sub>sw</sub>/s choisi</th>` +
+    `<th>V<sub>Ed</sub> a d du parement</th><th>V<sub>Rd,c</sub></th><th>V<sub>Rd,max</sub></th><th>A<sub>sw</sub>/s req (mm²/mm)</th><th>A<sub>sw</sub>/s choisi</th>` +
     `<th>V<sub>Rd,s</sub></th><th>taux</th><th>s<sub>max</sub> (mm)</th></tr></thead><tbody>${lignes}</tbody></table></div>` +
-    `<p class="note">§6.2.2 et §6.2.3, cadres droits, z = 0,9 d. V<sub>Ed</sub> reduit a d du nu de l'appui (§6.2.1(8)) pour les cadres ; V<sub>Rd,max</sub> compare a V<sub>Ed</sub> a l'axe. A<sub>sw</sub>/s requis : minimum &rho;<sub>w,min</sub> compris (§9.2.2(5)).</p>`
+    `<p class="note">§6.2.2 et §6.2.3, cadres droits, z = 0,9 d. V<sub>Ed</sub> reduit a d du parement de l'appui (§6.2.1(8)) pour les cadres ; V<sub>Rd,max</sub> compare a V<sub>Ed</sub> a l'axe. A<sub>sw</sub>/s requis : minimum &rho;<sub>w,min</sub> compris (§9.2.2(5)).</p>`
   );
 }
 
@@ -344,7 +344,7 @@ export function tableauBAExtremites(ba: ResultatBA): string {
       lignes.push(
         `<tr><td>A${i + 1}</td><td>ancrage des aciers inferieurs, F<sub>E</sub> = ${nombreFr(a.ancrage.F_E, 1)} kN (§9.2.1.4(2))</td>` +
           `<td class="valeur">${mm2(a.ancrage.As_req)} mm²</td><td class="valeur${ok ? ' ok' : ' refus'}">${mm2(a.ancrage.As_prov)} mm²</td>` +
-          `<td class="valeur">${Number.isFinite(a.ancrage.l_requise) ? `l<sub>bd</sub> ${nombreFr(a.ancrage.l_requise, 0)} mm au-dela du nu` : '—'}</td></tr>`
+          `<td class="valeur">${Number.isFinite(a.ancrage.l_requise) ? `l<sub>bd</sub> ${nombreFr(a.ancrage.l_requise, 0)} mm au-dela du parement` : '—'}</td></tr>`
       );
     }
     if (a.monolithique !== null) {
@@ -358,7 +358,7 @@ export function tableauBAExtremites(ba: ResultatBA): string {
   for (const z of ba.zones) {
     if (!z.zone.nom.startsWith('travee') || z.part_filants === null) continue;
     lignes.push(
-      `<tr><td>${echapper(z.zone.nom)}</td><td>aciers inferieurs prolonges sur appuis (§9.2.1.4(1), §9.2.1.5(1))</td>` +
+      `<tr><td>${notationHtml(z.zone.nom)}</td><td>aciers inferieurs prolonges sur appuis (§9.2.1.4(1), §9.2.1.5(1))</td>` +
         `<td class="valeur">25 %</td><td class="valeur${z.part_filants >= 0.25 ? ' ok' : ' refus'}">${nombreFr(z.part_filants * 100, 0)} %</td><td></td></tr>`
     );
   }
@@ -413,7 +413,7 @@ export function blocsBA(ba: ResultatBA, aciers: AciersChoisis): BlocResultat[] {
       lignes: ba.zones.flatMap((z) =>
         z.tranchant.map((t) => ({
           symbole: `${z.zone.nom}, x = ${cote(t.x)}`,
-          libelle: `V_Ed ${nombreFr(t.V_Ed, 1)} kN (axe), ${nombreFr(t.V_Ed_reduit, 1)} kN a d du nu ; V_Rd,max ${nombreFr(t.V_Rd_max, 1)} kN ; V_Rd,s ${nombreFr(t.V_Rd_s, 1)} kN`,
+          libelle: `V_Ed ${nombreFr(t.V_Ed, 1)} kN (axe), ${nombreFr(t.V_Ed_reduit, 1)} kN a d du parement ; V_Rd,max ${nombreFr(t.V_Rd_max, 1)} kN ; V_Rd,s ${nombreFr(t.V_Rd_s, 1)} kN`,
           valeur: `A_sw/s req ${nombreFr(t.Asw_s_req, 3)} mm2/mm`,
         }))
       ),
@@ -440,7 +440,7 @@ export function tableauAcier(r: ResultatAcier): string {
   const lignes = r.zones
     .map(
       (z) =>
-        `<tr><td>${echapper(z.zone.nom)}</td><td class="valeur">${nombreFr(z.M_Ed, 1)}</td><td class="valeur">${nombreFr(z.V_Ed, 1)}</td>` +
+        `<tr><td>${notationHtml(z.zone.nom)}</td><td class="valeur">${nombreFr(z.M_Ed, 1)}</td><td class="valeur">${nombreFr(z.V_Ed, 1)}</td>` +
         `<td class="valeur">${z.element === null ? '—' : z.element.classification.classe}</td>` +
         celluleTaux(z.tauxSection) +
         celluleTaux(z.tauxCisaillement) +
@@ -449,12 +449,12 @@ export function tableauAcier(r: ResultatAcier): string {
         `<td class="valeur">${nombreFr(z.w, 1)} / ${nombreFr(z.w_lim, 1)}</td>` +
         celluleTaux(z.tauxFleche) +
         '</tr>' +
-        (z.erreur === null ? '' : `<tr><td></td><td colspan="9" class="refus">${echapper(z.erreur)}</td></tr>`)
+        (z.erreur === null ? '' : `<tr><td></td><td colspan="9" class="refus">${notationHtml(z.erreur)}</td></tr>`)
     )
     .join('');
   return (
     `<p class="verdict verdict-${r.verdict}">${VERDICTS_ACIER[r.verdict]}</p>` +
-    `<p class="note">${echapper(c.nom)} : A = ${nombreFr(c.A / 100, 1)} cm², I<sub>y</sub> = ${nombreFr(c.Iy / 1e4, 0)} cm⁴, ` +
+    `<p class="note">${notationHtml(c.nom)} : A = ${nombreFr(c.A / 100, 1)} cm², I<sub>y</sub> = ${nombreFr(c.Iy / 1e4, 0)} cm⁴, ` +
     `poids propre ${nombreFr(c.poids, 3)} kN/m, EI = ${nombreFr(c.EI, 0)} kN·m².</p>` +
     '<div class="defilement"><table class="tableau"><thead><tr><th>zone</th><th>M<sub>Ed</sub> (kN.m)</th><th>V<sub>Ed</sub> (kN)</th><th>classe</th>' +
     '<th>M<sub>Ed</sub> / M<sub>y,V,Rd</sub></th><th>V<sub>Ed</sub> / V<sub>pl,Rd</sub></th><th>L<sub>LT</sub> (m)</th><th>M<sub>Ed</sub> / M<sub>b,Rd</sub></th>' +

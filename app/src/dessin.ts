@@ -6,7 +6,7 @@
  * endroit dans chacun.
  */
 
-import { echapper, nombreFr } from 'aedificium-ui';
+import { echapper, nombreFr, notationSvg } from 'aedificium-ui';
 import {
   libelleLit,
   type AciersChoisis,
@@ -45,7 +45,7 @@ export function cote(x: number): string {
 function texteBorne(x: number, y: number, texte: string, classe = 'valeur'): string {
   const demi = texte.length * 3.4;
   const xc = Math.min(Math.max(x, demi + 2), LARGEUR - demi - 2);
-  return `<text class="${classe}" x="${f(xc)}" y="${f(y)}" text-anchor="middle">${texte}</text>`;
+  return `<text class="${classe}" x="${f(xc)}" y="${f(y)}" text-anchor="middle">${notationSvg(texte)}</text>`;
 }
 
 // --- Schema mecanique ----------------------------------------------------------------
@@ -222,14 +222,14 @@ export function dessinSchema(p: Poutre): string {
     if (i > 0) {
       const d = x - reperes[i - 1];
       if (X(x) - X(reperes[i - 1]) > 22) {
-        corps += `<text class="cote-texte" x="${f((X(x) + X(reperes[i - 1])) / 2)}" y="${yc - 4}" text-anchor="middle">${cote(d)}</text>`;
+        corps += `<text class="cote-texte" x="${f((X(x) + X(reperes[i - 1])) / 2)}" y="${yc - 4}" text-anchor="middle">${notationSvg(cote(d))}</text>`;
       }
     }
   });
-  corps += `<text class="legende" x="${MARGE_G}" y="${yc + 20}">cotes en m · L = ${cote(p.longueur)} m</text>`;
+  corps += `<text class="legende" x="${MARGE_G}" y="${yc + 20}">${notationSvg(`cotes en m · L = ${cote(p.longueur)} m`)}</text>`;
 
   const vb = `0 ${haut} ${LARGEUR} ${yc + 28 - haut}`;
-  return `<svg class="trace" xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" role="img" aria-label="schema mecanique de la poutre"><title>Schema mecanique</title>${corps}</svg>`;
+  return `<svg class="trace" xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" role="img" aria-label="schema mecanique de la poutre"><title>${notationSvg('Schema mecanique')}</title>${corps}</svg>`;
 }
 
 // --- Diagrammes -------------------------------------------------------------------
@@ -292,7 +292,7 @@ export function dessinDiagramme(r: ResultatPoutre, g: Grandeur): string {
   const echelle = max > 1e-12 ? H / max : 0;
   const Y = (v: number): number => y0 + (d.versLeBas ? 1 : -1) * v * echelle;
 
-  let corps = `<text class="titre" x="8" y="16">${d.titre} (${d.unite})</text>`;
+  let corps = `<text class="titre" x="8" y="16">${notationSvg(`${d.titre} (${d.unite})`)}</text>`;
   for (const a of r.poutre.appuis) {
     corps += `<line class="repere" x1="${f(X(a.x))}" y1="24" x2="${f(X(a.x))}" y2="${f(y0 + H + 8)}"/>`;
   }
@@ -329,13 +329,13 @@ export function dessinDiagramme(r: ResultatPoutre, g: Grandeur): string {
     const dessous = y >= y0;
     const x = Math.min(Math.max(X(e.x), MARGE_G - 20), LARGEUR - 20);
     corps += `<circle class="point" cx="${f(X(e.x))}" cy="${f(y)}" r="2.2"/>`;
-    corps += `<text class="valeur" x="${f(x)}" y="${f(dessous ? y + 13 : y - 5)}" text-anchor="middle">${echapper(nombreFr(e.valeur, d.decimales))}</text>`;
+    corps += `<text class="valeur" x="${f(x)}" y="${f(dessous ? y + 13 : y - 5)}" text-anchor="middle">${notationSvg(nombreFr(e.valeur, d.decimales))}</text>`;
   }
   const hauteur = y0 + H + 22;
   const legende =
     g === 'M' ? 'M > 0 : fibre inferieure tendue, trace vers le bas' : g === 'V' ? 'V = dM/dx, positif vers le haut' : 'fleche positive vers le bas, echelle amplifiee';
-  corps += `<text class="legende" x="${LARGEUR - MARGE_D}" y="16" text-anchor="end">${legende}</text>`;
-  return `<svg class="trace" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${LARGEUR} ${hauteur}" role="img" aria-label="${d.titre}"><title>${d.titre}</title>${corps}</svg>`;
+  corps += `<text class="legende" x="${LARGEUR - MARGE_D}" y="16" text-anchor="end">${notationSvg(legende)}</text>`;
+  return `<svg class="trace" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${LARGEUR} ${hauteur}" role="img" aria-label="${d.titre}"><title>${notationSvg(d.titre)}</title>${corps}</svg>`;
 }
 
 // --- Enveloppes et epure ------------------------------------------------------------
@@ -350,7 +350,7 @@ export function dessinEnveloppe(env: Enveloppe, L: number, g: Grandeur, titre: s
   const H = 62;
   const y0 = 34 + H;
   const Y = (v: number): number => y0 + (d.versLeBas ? 1 : -1) * (v * H) / max;
-  let corps = `<text class="titre" x="8" y="16">${echapper(titre)} (${d.unite})</text>`;
+  let corps = `<text class="titre" x="8" y="16">${notationSvg(`${titre} (${d.unite})`)}</text>`;
   for (const a of env.appuis) corps += `<line class="repere" x1="${f(X(a.appui.x))}" y1="24" x2="${f(X(a.appui.x))}" y2="${f(y0 + H + 8)}"/>`;
   const haut = pts.map((p) => `${f(X(p.x))},${f(Y(lire(p)[1]))}`);
   const bas = pts.map((p) => `${f(X(p.x))},${f(Y(lire(p)[0]))}`).reverse();
@@ -373,11 +373,11 @@ export function dessinEnveloppe(env: Enveloppe, L: number, g: Grandeur, titre: s
     const y = Y(e.valeur);
     const x = Math.min(Math.max(X(e.x), MARGE_G - 20), LARGEUR - 20);
     corps += `<circle class="point" cx="${f(X(e.x))}" cy="${f(y)}" r="2.2"/>`;
-    corps += `<text class="valeur" x="${f(x)}" y="${f(y >= y0 ? y + 13 : y - 5)}" text-anchor="middle">${nombreFr(e.valeur, d.decimales)}</text>`;
+    corps += `<text class="valeur" x="${f(x)}" y="${f(y >= y0 ? y + 13 : y - 5)}" text-anchor="middle">${notationSvg(nombreFr(e.valeur, d.decimales))}</text>`;
   }
   const hauteur = y0 + H + 22;
-  corps += `<text class="legende" x="${LARGEUR - MARGE_D}" y="16" text-anchor="end">enveloppe : maximum en trait plein, minimum en tirets</text>`;
-  return `<svg class="trace" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${LARGEUR} ${hauteur}" role="img" aria-label="${echapper(titre)}"><title>${echapper(titre)}</title>${corps}</svg>`;
+  corps += `<text class="legende" x="${LARGEUR - MARGE_D}" y="16" text-anchor="end">${notationSvg('enveloppe : maximum en trait plein, minimum en tirets')}</text>`;
+  return `<svg class="trace" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${LARGEUR} ${hauteur}" role="img" aria-label="${echapper(titre)}"><title>${notationSvg(titre)}</title>${corps}</svg>`;
 }
 
 /**
@@ -393,8 +393,8 @@ export function dessinEpure(ba: ResultatBA, L: number, aciers: AciersChoisis): s
   const Y = (v: number): number => y0 + (v * H) / max;
   const ligne = (classe: string, lire: (p: PointEpure) => number): string =>
     `<polyline class="${classe}" points="${pts.map((p) => `${f(X(p.x))},${f(Y(lire(p)))}`).join(' ')}"/>`;
-  let corps = `<text class="titre" x="8" y="16">Epure d'arret des barres (kN·m)</text>`;
-  corps += `<text class="legende" x="${LARGEUR - MARGE_D}" y="16" text-anchor="end">M_Ed en trait fin, decale de a_l en tirets, M_Rd en trait fort</text>`;
+  let corps = `<text class="titre" x="8" y="16">${notationSvg("Epure d'arret des barres (kN·m)")}</text>`;
+  corps += `<text class="legende" x="${LARGEUR - MARGE_D}" y="16" text-anchor="end">${notationSvg('M_Ed en trait fin, decale de a_l en tirets, M_Rd en trait fort')}</text>`;
   corps += `<line class="axe" x1="${f(X(0))}" y1="${y0}" x2="${f(X(L))}" y2="${y0}"/>`;
   corps += ligne('courbe', (p) => p.M_max) + ligne('courbe', (p) => p.M_min);
   corps += ligne('courbe-decalee', (p) => p.Mdec_max) + ligne('courbe-decalee', (p) => p.Mdec_min);
@@ -404,7 +404,7 @@ export function dessinEpure(ba: ResultatBA, L: number, aciers: AciersChoisis): s
   const yb = y0 + H + 30;
   const barre = (x0: number, x1: number, y: number, texte: string, classe: string): string =>
     `<line class="${classe}" x1="${f(X(x0))}" y1="${f(y)}" x2="${f(X(x1))}" y2="${f(y)}"/>` +
-    `<text class="cote-texte" x="${f((X(x0) + X(x1)) / 2)}" y="${f(y - 3)}" text-anchor="middle">${echapper(texte)}</text>`;
+    `<text class="cote-texte" x="${f((X(x0) + X(x1)) / 2)}" y="${f(y - 3)}" text-anchor="middle">${notationSvg(texte)}</text>`;
   corps += `<rect class="coffrage" x="${f(X(0))}" y="${yb}" width="${f(X(L) - X(0))}" height="64"/>`;
   if (aciers.montage !== null) corps += barre(0, L, yb + 10, `${libelleLit(aciers.montage)} filants`, 'barre');
   ba.appuis.forEach((a, i) => {
@@ -421,6 +421,6 @@ export function dessinEpure(ba: ResultatBA, L: number, aciers: AciersChoisis): s
     }
   });
   const hauteur = yb + 80;
-  corps += `<text class="legende" x="${MARGE_G}" y="${hauteur - 4}">longueurs d'ancrage comprises : l_bd = ${nombreFr(ba.l_bd_inf, 0)} mm (bas), ${nombreFr(ba.l_bd_sup, 0)} mm (haut) ; a_l = ${nombreFr(ba.a_l, 3)} m</text>`;
-  return `<svg class="trace" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${LARGEUR} ${hauteur}" role="img" aria-label="epure d arret des barres"><title>Epure d'arret des barres</title>${corps}</svg>`;
+  corps += `<text class="legende" x="${MARGE_G}" y="${hauteur - 4}">${notationSvg(`longueurs d'ancrage comprises : l_bd = ${nombreFr(ba.l_bd_inf, 0)} mm (bas), ${nombreFr(ba.l_bd_sup, 0)} mm (haut) ; a_l = ${nombreFr(ba.a_l, 3)} m`)}</text>`;
+  return `<svg class="trace" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${LARGEUR} ${hauteur}" role="img" aria-label="epure d arret des barres"><title>${notationSvg("Epure d'arret des barres")}</title>${corps}</svg>`;
 }
