@@ -330,9 +330,9 @@ export function tableauBATranchant(ba: ResultatBA): string {
     .join('');
   return (
     `<h3>Effort tranchant</h3><div class="defilement"><table class="tableau"><thead><tr><th>zone</th><th>appui x (m)</th><th>V<sub>Ed</sub> axe (kN)</th>` +
-    `<th>V<sub>Ed</sub> a d du parement</th><th>V<sub>Rd,c</sub></th><th>V<sub>Rd,max</sub></th><th>A<sub>sw</sub>/s req (mm²/mm)</th><th>A<sub>sw</sub>/s choisi</th>` +
+    `<th>V<sub>Ed</sub> à d du nu</th><th>V<sub>Rd,c</sub></th><th>V<sub>Rd,max</sub></th><th>A<sub>sw</sub>/s req (mm²/mm)</th><th>A<sub>sw</sub>/s choisi</th>` +
     `<th>V<sub>Rd,s</sub></th><th>taux</th><th>s<sub>max</sub> (mm)</th></tr></thead><tbody>${lignes}</tbody></table></div>` +
-    `<p class="note">§6.2.2 et §6.2.3, cadres droits, z = 0,9 d. V<sub>Ed</sub> réduit à d du parement de l'appui (§6.2.1(8)) pour les cadres ; V<sub>Rd,max</sub> comparé à V<sub>Ed</sub> a l'axe. A<sub>sw</sub>/s requis : minimum &rho;<sub>w,min</sub> compris (§9.2.2(5)).</p>`
+    `<p class="note">§6.2.2 et §6.2.3, cadres droits, z = 0,9 d. V<sub>Ed</sub> réduit à d du nu de l'appui (§6.2.1(8)) pour les cadres ; V<sub>Rd,max</sub> comparé à V<sub>Ed</sub> à l'axe. A<sub>sw</sub>/s requis : minimum &rho;<sub>w,min</sub> compris (§9.2.2(5)).</p>`
   );
 }
 
@@ -344,7 +344,7 @@ export function tableauBAExtremites(ba: ResultatBA): string {
       lignes.push(
         `<tr><td>A${i + 1}</td><td>ancrage des aciers inferieurs, F<sub>E</sub> = ${nombreAffiche(a.ancrage.F_E, 1)} kN (§9.2.1.4(2))</td>` +
           `<td class="valeur">${mm2(a.ancrage.As_req)} mm²</td><td class="valeur${ok ? ' ok' : ' refus'}">${mm2(a.ancrage.As_prov)} mm²</td>` +
-          `<td class="valeur">${Number.isFinite(a.ancrage.l_requise) ? `l<sub>bd</sub> ${nombreAffiche(a.ancrage.l_requise, 0)} mm au-delà du parement` : '—'}</td></tr>`
+          `<td class="valeur">${Number.isFinite(a.ancrage.l_requise) ? `l<sub>bd</sub> ${nombreAffiche(a.ancrage.l_requise, 0)} mm au-delà du nu` : '—'}</td></tr>`
       );
     }
     if (a.monolithique !== null) {
@@ -413,7 +413,7 @@ export function blocsBA(ba: ResultatBA, aciers: AciersChoisis): BlocResultat[] {
       lignes: ba.zones.flatMap((z) =>
         z.tranchant.map((t) => ({
           symbole: `${z.zone.nom}, x = ${cote(t.x)}`,
-          libelle: `V_Ed ${nombreAffiche(t.V_Ed, 1)} kN (axe), ${nombreAffiche(t.V_Ed_reduit, 1)} kN à d du parement ; V_Rd,max ${nombreAffiche(t.V_Rd_max, 1)} kN ; V_Rd,s ${nombreAffiche(t.V_Rd_s, 1)} kN`,
+          libelle: `V_Ed ${nombreAffiche(t.V_Ed, 1)} kN (axe), ${nombreAffiche(t.V_Ed_reduit, 1)} kN à d du nu ; V_Rd,max ${nombreAffiche(t.V_Rd_max, 1)} kN ; V_Rd,s ${nombreAffiche(t.V_Rd_s, 1)} kN`,
           valeur: `A_sw/s req ${nombreAffiche(t.Asw_s_req, 3)} mm2/mm`,
         }))
       ),

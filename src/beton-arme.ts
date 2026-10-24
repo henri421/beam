@@ -558,13 +558,13 @@ export function calculerBetonArme(
   }
   for (const p of epure) {
     if (p.Mdec_max > p.MRd_inf + 1e-6) {
-      avertissements.push(`Epure : à x = ${nombreAffiche(p.x, 2)} m, le moment décalé ${nombreAffiche(p.Mdec_max, 1)} kN.m dépasse le moment résistant des aciers inférieurs ${nombreAffiche(p.MRd_inf, 1)} kN.m.`);
+      avertissements.push(`Épure : à x = ${nombreAffiche(p.x, 2)} m, le moment décalé ${nombreAffiche(p.Mdec_max, 1)} kN.m dépasse le moment résistant des aciers inférieurs ${nombreAffiche(p.MRd_inf, 1)} kN.m.`);
       break;
     }
   }
   for (const p of epure) {
     if (p.Mdec_min < p.MRd_sup - 1e-6) {
-      avertissements.push(`Epure : à x = ${nombreAffiche(p.x, 2)} m, le moment décalé ${nombreAffiche(p.Mdec_min, 1)} kN.m dépasse le moment résistant des aciers supérieurs ${nombreAffiche(p.MRd_sup, 1)} kN.m.`);
+      avertissements.push(`Épure : à x = ${nombreAffiche(p.x, 2)} m, le moment décalé ${nombreAffiche(p.Mdec_min, 1)} kN.m dépasse le moment résistant des aciers supérieurs ${nombreAffiche(p.MRd_sup, 1)} kN.m.`);
       break;
     }
   }

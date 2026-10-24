@@ -178,7 +178,7 @@ describe('epure sur trois travees', () => {
 
   it('l epure resistante couvre la courbe decalee ou le signale', () => {
     const couvert = res.epure.every((pt) => pt.Mdec_max <= pt.MRd_inf + 1e-6 && pt.Mdec_min >= pt.MRd_sup - 1e-6);
-    const signale = res.avertissements.some((a) => a.startsWith('Epure'));
+    const signale = res.avertissements.some((a) => a.startsWith('Épure'));
     expect(couvert || signale).toBe(true);
   });
 
