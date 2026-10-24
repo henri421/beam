@@ -180,7 +180,7 @@ function exemple(m: Omit<ModeleSaisie, 'combinaisons' | 'ba' | 'acier'> & { ba?:
 
 export const EXEMPLES: Record<string, { libelle: string; modele: ModeleSaisie }> = {
   'ba-trois-travees': {
-    libelle: 'Poutre BA trois travees, G + Q, ferraillage',
+    libelle: 'Poutre BA trois travées, G + Q, ferraillage',
     modele: exemple({
       longueur: '16',
       E: '31000',
@@ -204,7 +204,7 @@ export const EXEMPLES: Record<string, { libelle: string; modele: ModeleSaisie }>
     }),
   },
   'trois-travees': {
-    libelle: 'Trois travees egales, charge uniforme',
+    libelle: 'Trois travées égales, charge uniforme',
     modele: exemple({
       longueur: '15',
       E: '30000',
@@ -215,7 +215,7 @@ export const EXEMPLES: Record<string, { libelle: string; modele: ModeleSaisie }>
     }),
   },
   'deux-consoles': {
-    libelle: 'Biappuyee avec une console de chaque cote',
+    libelle: 'Biappuyée avec une console de chaque côté',
     modele: exemple({
       longueur: '10',
       E: '210000',
@@ -231,7 +231,7 @@ export const EXEMPLES: Record<string, { libelle: string; modele: ModeleSaisie }>
     }),
   },
   'encastree-appuyee': {
-    libelle: 'Encastree - appuyee, charge triangulaire et force',
+    libelle: 'Encastrée - appuyée, charge triangulaire et force',
     modele: exemple({
       longueur: '6',
       E: '210000',
@@ -245,7 +245,7 @@ export const EXEMPLES: Record<string, { libelle: string; modele: ModeleSaisie }>
     }),
   },
   gerber: {
-    libelle: 'Poutre Gerber (rotules), deux travees et console',
+    libelle: 'Poutre Gerber (rotules), deux travées et console',
     modele: exemple({
       longueur: '16',
       E: '210000',
@@ -256,7 +256,7 @@ export const EXEMPLES: Record<string, { libelle: string; modele: ModeleSaisie }>
     }),
   },
   ressorts: {
-    libelle: 'Appui elastique et encastrement elastique',
+    libelle: 'Appui élastique et encastrement élastique',
     modele: exemple({
       longueur: '12',
       E: '30000',
@@ -271,7 +271,7 @@ export const EXEMPLES: Record<string, { libelle: string; modele: ModeleSaisie }>
     }),
   },
   tassement: {
-    libelle: 'Deux travees, tassement de l appui central',
+    libelle: "Deux travées, tassement de l'appui central",
     modele: exemple({
       longueur: '12',
       E: '30000',
@@ -295,7 +295,7 @@ class SaisieInvalide extends Error {}
 
 function nombre(texte: string, quoi: string): number {
   const v = lireNombre(texte);
-  if (v === null) throw new SaisieInvalide(`${quoi} : nombre a renseigner.`);
+  if (v === null) throw new SaisieInvalide(`${quoi} : nombre à renseigner.`);
   return v;
 }
 
@@ -347,14 +347,14 @@ export function poutreDepuisModele(m: ModeleSaisie): Lecture {
         case 'moment':
           return { type: 'moment', x: nombre(l.x, `${n}, abscisse x`), M: nombre(l.M, `${n}, moment M`), cas: l.cas };
         case 'repartie':
-          return { type: 'repartie', a: nombre(l.a, `${n}, debut a`), b: nombre(l.b, `${n}, fin b`), q: nombre(l.q, `${n}, intensite q`), cas: l.cas };
+          return { type: 'repartie', a: nombre(l.a, `${n}, début a`), b: nombre(l.b, `${n}, fin b`), q: nombre(l.q, `${n}, intensité q`), cas: l.cas };
         case 'lineaire':
           return {
             type: 'lineaire',
-            a: nombre(l.a, `${n}, debut a`),
+            a: nombre(l.a, `${n}, début a`),
             b: nombre(l.b, `${n}, fin b`),
-            q_a: nombre(l.q_a, `${n}, intensite q_a`),
-            q_b: nombre(l.q_b, `${n}, intensite q_b`),
+            q_a: nombre(l.q_a, `${n}, intensité q_a`),
+            q_b: nombre(l.q_b, `${n}, intensité q_b`),
             cas: l.cas,
           };
       }
@@ -407,7 +407,7 @@ export function donneesDepuisModele(m: ModeleSaisie): LectureComplete {
       gamma_T: nombre(c.gamma_T, 'gamma des tassements'),
       redistribution: m.ba.actif ? m.appuis.map((a, i) => (a.delta.trim() === '' ? 1 : nombre(a.delta, `Appui ${i + 1}, delta`))) : m.appuis.map(() => 1),
     };
-    if (m.ba.actif && m.acier.actif) throw new SaisieInvalide('Choisir beton arme OU acier, pas les deux.');
+    if (m.ba.actif && m.acier.actif) throw new SaisieInvalide('Choisir béton armé OU acier, pas les deux.');
     if (m.acier.actif) {
       const a = m.acier;
       ajusterFerraillage(m, zonesDeChargement(lecture.poutre).length);
@@ -424,7 +424,7 @@ export function donneesDepuisModele(m: ModeleSaisie): LectureComplete {
         L_LT: a.zones.map((z, j) => optionnel(z.L_LT, `Zone ${j + 1}, longueur entre maintiens`)),
         Mcr: a.zones.map((z, j) => optionnel(z.Mcr, `Zone ${j + 1}, M_cr`)),
         deversementEmpeche: a.empeche,
-        flecheLimite: nombre(a.flecheLimite, 'Fleche limite L / n'),
+        flecheLimite: nombre(a.flecheLimite, 'Flèche limite L / n'),
       };
       return { ok: true, poutre, combinaisons, ba: null, acier };
     }
@@ -442,10 +442,10 @@ export function donneesDepuisModele(m: ModeleSaisie): LectureComplete {
     const ba: DonneesBA = {
       section: {
         forme: b.forme,
-        b_w: nombre(b.b_w, 'Largeur d ame b_w'),
+        b_w: nombre(b.b_w, "Largeur d'âme b_w"),
         h: nombre(b.h, 'Hauteur h'),
-        b_eff: b.forme === 'te' ? nombre(b.b_eff, 'Largeur de table b_eff') : nombre(b.b_w, 'Largeur d ame b_w'),
-        h_f: b.forme === 'te' ? nombre(b.h_f, 'Epaisseur de table h_f') : 0,
+        b_eff: b.forme === 'te' ? nombre(b.b_eff, 'Largeur de table b_eff') : nombre(b.b_w, "Largeur d'âme b_w"),
+        h_f: b.forme === 'te' ? nombre(b.h_f, 'Épaisseur de table h_f') : 0,
       },
       fck: nombre(b.fck, 'f_ck'),
       fyk: nombre(b.fyk, 'f_yk'),
@@ -453,7 +453,7 @@ export function donneesDepuisModele(m: ModeleSaisie): LectureComplete {
       a_inf: nombre(b.a_inf, 'a_inf'),
       a_sup: nombre(b.a_sup, 'a_sup'),
       cotTheta: nombre(b.cotTheta, 'cot theta'),
-      cadres: { phi: nombre(b.cadre_phi, 'Diametre des cadres'), brins: nombre(b.cadre_brins, 'Nombre de brins'), s: nombre(b.cadre_s, 'Espacement des cadres') },
+      cadres: { phi: nombre(b.cadre_phi, 'Diamètre des cadres'), brins: nombre(b.cadre_brins, 'Nombre de brins'), s: nombre(b.cadre_s, 'Espacement des cadres') },
       largeurAppui: nombreOuZero(b.largeurAppui, 'Largeur des appuis'),
       extremitesMonolithiques: b.monolithique,
       aciers: {
@@ -549,7 +549,7 @@ export function lignesFerraillage(m: ModeleSaisie, zones: { nom: string; x0: num
     .map(
       (zone, j) =>
         `<div class="ligne"><div class="ligne-tete"><span class="ligne-num">${echapper(zone.nom)}</span>` +
-        `<span class="ligne-type">${nombreAffiche(zone.x0)} – ${nombreAffiche(zone.x1)} m, aciers inferieurs</span></div><div class="ligne-champs">` +
+        `<span class="ligne-type">${nombreAffiche(zone.x0)} – ${nombreAffiche(zone.x1)} m, aciers inférieurs</span></div><div class="ligne-champs">` +
         texte('ferraillage', j, 'filants', 'filants', m.ba.zones[j]?.filants ?? '') +
         texte('ferraillage', j, 'renforts', 'renforts', m.ba.zones[j]?.renforts ?? '') +
         `</div></div>`
@@ -559,7 +559,7 @@ export function lignesFerraillage(m: ModeleSaisie, zones: { nom: string; x0: num
     .map(
       (x, i) =>
         `<div class="ligne"><div class="ligne-tete"><span class="ligne-num">A${i + 1}</span>` +
-        `<span class="ligne-type">x = ${nombreAffiche(x)} m, aciers superieurs</span></div><div class="ligne-champs">` +
+        `<span class="ligne-type">x = ${nombreAffiche(x)} m, aciers supérieurs</span></div><div class="ligne-champs">` +
         texte('chapeaux', i, 'chapeaux', 'chapeaux', m.ba.chapeaux[i] ?? '') +
         `</div></div>`
     )
@@ -577,7 +577,7 @@ export function lignesAcier(m: ModeleSaisie, zones: { nom: string; x0: number; x
       (zone, j) =>
         `<div class="ligne"><div class="ligne-tete"><span class="ligne-num">${echapper(zone.nom)}</span>` +
         `<span class="ligne-type">${nombreAffiche(zone.x0)} – ${nombreAffiche(zone.x1)} m</span></div><div class="ligne-champs">` +
-        champ(j, 'L_LT', 'L entre maintiens (m)', m.acier.zones[j]?.L_LT ?? '', nombreAffiche(zone.x1 - zone.x0)) +
+        champ(j, 'L_LT', 'Longueur entre maintiens (m)', m.acier.zones[j]?.L_LT ?? '', nombreAffiche(zone.x1 - zone.x0)) +
         champ(j, 'Mcr', 'M_cr (kN.m)', m.acier.zones[j]?.Mcr ?? '', 'C1 = 1') +
         `</div></div>`
     )
@@ -605,17 +605,17 @@ export function modeleDepuisJson(contenu: string): ModeleSaisie {
   try {
     brut = JSON.parse(contenu);
   } catch {
-    throw new Error('Fichier illisible : ce n est pas du JSON.');
+    throw new Error("Fichier illisible : ce n'est pas du JSON.");
   }
   const o = brut as { format?: unknown; modele?: Partial<Record<keyof ModeleSaisie, unknown>> };
   if (o === null || typeof o !== 'object' || o.format !== FORMAT_FICHIER || typeof o.modele !== 'object' || o.modele === null) {
-    throw new Error('Ce fichier n est pas un modele de poutres-continues.');
+    throw new Error("Ce fichier n'est pas un modèle de poutres-continues.");
   }
   const m = o.modele;
   const tableau = (v: unknown): Record<string, unknown>[] =>
     Array.isArray(v) ? v.filter((e): e is Record<string, unknown> => e !== null && typeof e === 'object') : [];
   const appuis = tableau(m.appuis).map((a): LigneAppui => {
-    if (!TYPES_APPUI.includes(a.type as TypeAppui)) throw new Error(`Type d appui inconnu : ${texte(a.type)}.`);
+    if (!TYPES_APPUI.includes(a.type as TypeAppui)) throw new Error(`Type d'appui inconnu : ${texte(a.type)}.`);
     return {
       type: a.type as TypeAppui,
       x: texte(a.x),

@@ -229,7 +229,7 @@ export function dessinSchema(p: Poutre): string {
   corps += `<text class="legende" x="${MARGE_G}" y="${yc + 20}">${notationSvg(`cotes en m · L = ${cote(p.longueur)} m`)}</text>`;
 
   const vb = `0 ${haut} ${LARGEUR} ${yc + 28 - haut}`;
-  return `<svg class="trace" xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" role="img" aria-label="schema mecanique de la poutre"><title>${notationSvg('Schema mecanique')}</title>${corps}</svg>`;
+  return `<svg class="trace" xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" role="img" aria-label="schéma mécanique de la poutre"><title>${notationSvg('Schéma mécanique')}</title>${corps}</svg>`;
 }
 
 // --- Diagrammes -------------------------------------------------------------------
@@ -238,9 +238,9 @@ export type Grandeur = 'M' | 'V' | 'w';
 
 const DIAGRAMMES: Record<Grandeur, { titre: string; unite: string; versLeBas: boolean; decimales: number }> = {
   // Moment trace du cote de la fibre tendue : positif vers le bas.
-  M: { titre: 'Moment flechissant M', unite: 'kN·m', versLeBas: true, decimales: 2 },
+  M: { titre: 'Moment fléchissant M', unite: 'kN·m', versLeBas: true, decimales: 2 },
   V: { titre: 'Effort tranchant V', unite: 'kN', versLeBas: false, decimales: 2 },
-  w: { titre: 'Deformee w', unite: 'mm', versLeBas: true, decimales: 2 },
+  w: { titre: 'Déformée w', unite: 'mm', versLeBas: true, decimales: 2 },
 };
 
 interface Etiquette {
@@ -333,7 +333,7 @@ export function dessinDiagramme(r: ResultatPoutre, g: Grandeur): string {
   }
   const hauteur = y0 + H + 22;
   const legende =
-    g === 'M' ? 'M > 0 : fibre inferieure tendue, trace vers le bas' : g === 'V' ? 'V = dM/dx, positif vers le haut' : 'fleche positive vers le bas, echelle amplifiee';
+    g === 'M' ? 'M > 0 : fibre inférieure tendue, trace vers le bas' : g === 'V' ? 'V = dM/dx, positif vers le haut' : 'flèche positive vers le bas, échelle amplifiée';
   corps += `<text class="legende" x="${LARGEUR - MARGE_D}" y="16" text-anchor="end">${notationSvg(legende)}</text>`;
   return `<svg class="trace" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${LARGEUR} ${hauteur}" role="img" aria-label="${d.titre}"><title>${notationSvg(d.titre)}</title>${corps}</svg>`;
 }
@@ -393,8 +393,8 @@ export function dessinEpure(ba: ResultatBA, L: number, aciers: AciersChoisis): s
   const Y = (v: number): number => y0 + (v * H) / max;
   const ligne = (classe: string, lire: (p: PointEpure) => number): string =>
     `<polyline class="${classe}" points="${pts.map((p) => `${f(X(p.x))},${f(Y(lire(p)))}`).join(' ')}"/>`;
-  let corps = `<text class="titre" x="8" y="16">${notationSvg("Epure d'arret des barres (kN·m)")}</text>`;
-  corps += `<text class="legende" x="${LARGEUR - MARGE_D}" y="16" text-anchor="end">${notationSvg('M_Ed en trait fin, decale de a_l en tirets, M_Rd en trait fort')}</text>`;
+  let corps = `<text class="titre" x="8" y="16">${notationSvg("Épure d'arrêt des barres (kN·m)")}</text>`;
+  corps += `<text class="legende" x="${LARGEUR - MARGE_D}" y="16" text-anchor="end">${notationSvg('M_Ed en trait fin, décalé de a_l en tirets, M_Rd en trait fort')}</text>`;
   corps += `<line class="axe" x1="${f(X(0))}" y1="${y0}" x2="${f(X(L))}" y2="${y0}"/>`;
   corps += ligne('courbe', (p) => p.M_max) + ligne('courbe', (p) => p.M_min);
   corps += ligne('courbe-decalee', (p) => p.Mdec_max) + ligne('courbe-decalee', (p) => p.Mdec_min);
@@ -422,5 +422,5 @@ export function dessinEpure(ba: ResultatBA, L: number, aciers: AciersChoisis): s
   });
   const hauteur = yb + 80;
   corps += `<text class="legende" x="${MARGE_G}" y="${hauteur - 4}">${notationSvg(`longueurs d'ancrage comprises : l_bd = ${nombreAffiche(ba.l_bd_inf, 0)} mm (bas), ${nombreAffiche(ba.l_bd_sup, 0)} mm (haut) ; a_l = ${nombreAffiche(ba.a_l, 3)} m`)}</text>`;
-  return `<svg class="trace" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${LARGEUR} ${hauteur}" role="img" aria-label="epure d arret des barres"><title>${notationSvg("Epure d'arret des barres")}</title>${corps}</svg>`;
+  return `<svg class="trace" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${LARGEUR} ${hauteur}" role="img" aria-label="épure d'arrêt des barres"><title>${notationSvg("Épure d'arrêt des barres")}</title>${corps}</svg>`;
 }

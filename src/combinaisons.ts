@@ -298,20 +298,20 @@ export function verifierRedistribution(p: Poutre, deltas: number[], profil: Prof
   deltas.forEach((delta, i) => {
     if (delta === 1) return;
     const n = i + 1;
-    if (!Number.isFinite(delta) || delta > 1) throw new Error(`Appui ${n} : le coefficient de redistribution delta doit etre au plus 1.`);
+    if (!Number.isFinite(delta) || delta > 1) throw new Error(`Appui ${n} : le coefficient de redistribution delta doit être au plus 1.`);
     if (delta < minimum) {
-      throw new Error(`Appui ${n} : delta = ${nombreAffiche(delta)} est inferieur au minimum ${nombreAffiche(minimum)} des aciers de classe ${classeAcier} (§5.5(4)).`);
+      throw new Error(`Appui ${n} : delta = ${nombreAffiche(delta)} est inférieur au minimum ${nombreAffiche(minimum)} des aciers de classe ${classeAcier} (§5.5(4)).`);
     }
     const x = p.appuis[i].x;
     const g = zones.find((z) => Math.abs(z.x1 - x) < TOLERANCE_X && z.nom.startsWith('travee'));
     const d = zones.find((z) => Math.abs(z.x0 - x) < TOLERANCE_X && z.nom.startsWith('travee'));
     if (g === undefined || d === undefined) {
-      throw new Error(`Appui ${n} : la redistribution est reservee aux appuis intermediaires entre deux travees.`);
+      throw new Error(`Appui ${n} : la redistribution est réservée aux appuis intermédiaires entre deux travées.`);
     }
     const rapport = (g.x1 - g.x0) / (d.x1 - d.x0);
     if (rapport < 0.5 || rapport > 2) {
       throw new Error(
-        `Appui ${n} : rapport des portees voisines ${nombreAffiche(rapport, 2)} hors de [0,5 ; 2] ; le §5.5(4) n autorise pas la redistribution sans verification de la capacite de rotation.`
+        `Appui ${n} : rapport des portées voisines ${nombreAffiche(rapport, 2)} hors de [0,5 ; 2] ; le §5.5(4) n'autorise pas la redistribution sans vérification de la capacité de rotation.`
       );
     }
   });
@@ -354,8 +354,8 @@ export function combinaisons(profil: ProfilPoutre, d: DonneesCombinaisons, avecT
   });
   return {
     elu: { nom: `ELU fondamental ${d.formule === '6.10' ? '(6.10)' : '(6.10a) et (6.10b)'}`, etat: 'ELU', variantes: variantesAvecT(eluBase, d.gamma_T, avecT) },
-    caracteristique: els('ELS caracteristique', 1),
-    frequente: els('ELS frequent', d.psi1),
+    caracteristique: els('ELS caractéristique', 1),
+    frequente: els('ELS fréquent', d.psi1),
     quasiPermanente: els('ELS quasi permanent', d.psi2),
   };
 }
@@ -517,9 +517,9 @@ export function calculerCombinaisons(
 ): ResultatCombinaisons {
   verifierProfil(profil);
   for (const [nom, v] of [['psi0', d.psi0], ['psi1', d.psi1], ['psi2', d.psi2]] as const) {
-    if (!Number.isFinite(v) || v < 0 || v > 1) throw new Error(`Le coefficient ${nom} doit etre compris entre 0 et 1.`);
+    if (!Number.isFinite(v) || v < 0 || v > 1) throw new Error(`Le coefficient ${nom} doit être compris entre 0 et 1.`);
   }
-  if (!Number.isFinite(d.gamma_T) || d.gamma_T < 0) throw new Error('Le coefficient des tassements gamma_T doit etre un nombre positif ou nul.');
+  if (!Number.isFinite(d.gamma_T) || d.gamma_T < 0) throw new Error('Le coefficient des tassements gamma_T doit être un nombre positif ou nul.');
   const cas = calculerCas(poutre);
   verifierRedistribution(poutre, d.redistribution, profil, classeAcier);
   const avecRedistribution = d.redistribution.some((delta) => delta !== 1);
@@ -530,7 +530,7 @@ export function calculerCombinaisons(
   const combs = combinaisons(profil, d, cas.T !== null);
   const avertissements: string[] = [];
   if (cas.Q.every((q) => q === null)) avertissements.push('Aucune charge variable Q : les enveloppes se reduisent aux charges permanentes.');
-  if (avecRedistribution) avertissements.push('Moments redistribues a l ELU (§5.5) : la condition sur x_u/d se verifie avec la section.');
+  if (avecRedistribution) avertissements.push("Moments redistribués à l'ELU (§5.5) : la condition sur x_u/d se vérifie avec la section.");
   return {
     cas,
     casELU,

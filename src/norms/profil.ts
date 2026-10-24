@@ -80,7 +80,7 @@ export function verifierProfil(p: ProfilPoutre): void {
   for (const [cle, v] of Object.entries(p)) {
     if (typeof v !== 'object' || v === null) continue;
     const vs = v as ValeurSourcee;
-    if (vs.source.trim() === '') throw new Error(`Profil normatif : la valeur ${cle} n a pas de source ; le calcul est bloque.`);
-    if (!Number.isFinite(vs.valeur) || vs.valeur < 0) throw new Error(`Profil normatif : la valeur ${cle} doit etre un nombre positif.`);
+    if (vs.source.trim() === '') throw new Error(`Profil normatif : la valeur ${cle} n'a pas de source ; le calcul est bloqué.`);
+    if (!Number.isFinite(vs.valeur) || vs.valeur < 0) throw new Error(`Profil normatif : la valeur ${cle} doit être un nombre positif.`);
   }
 }

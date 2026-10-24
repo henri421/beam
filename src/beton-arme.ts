@@ -204,10 +204,10 @@ export function lireLit(texte: string): Lit | null {
   const t = texte.trim();
   if (t === '') return null;
   const m = /^(\d+)\s*(?:x|×|\*|ha|t|ø|φ|phi)?\s*(\d+(?:[.,]\d+)?)$/i.exec(t);
-  if (m === null) throw new Error(`Lit de barres illisible : « ${t} » (ecrire par exemple 3HA16).`);
+  if (m === null) throw new Error(`Lit de barres illisible : « ${t} » (écrire par exemple 3HA16).`);
   const n = Number(m[1]);
   const phi = Number(m[2].replace(',', '.'));
-  if (n <= 0 || phi <= 0) throw new Error(`Lit de barres « ${t} » : nombre et diametre strictement positifs.`);
+  if (n <= 0 || phi <= 0) throw new Error(`Lit de barres « ${t} » : nombre et diamètre strictement positifs.`);
   return { n, phi };
 }
 
@@ -281,7 +281,7 @@ function sectionPour(c: Contexte, sens: 1 | -1, As: number, As2: number): Sectio
 /** Moment resistant (kN.m, section-uls) et profondeur d'axe neutre (mm). */
 function resistance(c: Contexte, sens: 1 | -1, As: number, As2 = 0): { M_Rd: number; xu: number } {
   const r = verifyUniaxial(sectionPour(c, sens, As, As2), { N: 0, M: 0 }, c.norme);
-  if (!r.converged) throw new Error('Flexion : equilibre de la section introuvable (section-uls).');
+  if (!r.converged) throw new Error('Flexion : équilibre de la section introuvable (section-uls).');
   return { M_Rd: Math.abs(r.M_Rd), xu: r.neutralAxisDepth };
 }
 
@@ -371,27 +371,27 @@ function longueurAncrage(c: Contexte, phi: number, distanceAuFond: number, sigma
 
 function verifierDonneesBA(d: DonneesBA, nbZones: number, nbAppuis: number): void {
   const pos = (v: number, nom: string, u: string): void => {
-    if (!Number.isFinite(v) || v <= 0) throw new Error(`${nom} doit etre un nombre strictement positif (${u}).`);
+    if (!Number.isFinite(v) || v <= 0) throw new Error(`${nom} doit être un nombre strictement positif (${u}).`);
   };
   const s = d.section;
   pos(s.b_w, 'La largeur d ame b_w', 'mm');
   pos(s.h, 'La hauteur h', 'mm');
   if (s.forme === 'te') {
     pos(s.h_f, 'L epaisseur de table h_f', 'mm');
-    if (s.b_eff < s.b_w) throw new Error('La largeur de table b_eff doit etre au moins egale a b_w (mm).');
-    if (s.h_f >= s.h) throw new Error('L epaisseur de table h_f doit etre inferieure a h (mm).');
+    if (s.b_eff < s.b_w) throw new Error('La largeur de table b_eff doit être au moins égale à b_w (mm).');
+    if (s.h_f >= s.h) throw new Error("L'épaisseur de table h_f doit être inférieure à h (mm).");
   }
   pos(d.fck, 'La resistance du beton f_ck', 'MPa');
   pos(d.fyk, 'La limite elastique f_yk', 'MPa');
   pos(d.a_inf, 'La distance a_inf', 'mm');
   pos(d.a_sup, 'La distance a_sup', 'mm');
-  if (d.a_inf + d.a_sup >= s.h) throw new Error('a_inf + a_sup doit rester inferieur a h (mm).');
-  if (!(d.cotTheta >= 1 && d.cotTheta <= 2.5)) throw new Error('cot theta doit etre compris entre 1 et 2,5 (§6.2.3(2)).');
+  if (d.a_inf + d.a_sup >= s.h) throw new Error('a_inf + a_sup doit rester inférieur à h (mm).');
+  if (!(d.cotTheta >= 1 && d.cotTheta <= 2.5)) throw new Error('cot theta doit être compris entre 1 et 2,5 (§6.2.3(2)).');
   pos(d.cadres.phi, 'Le diametre des cadres', 'mm');
   pos(d.cadres.brins, 'Le nombre de brins', '-');
   pos(d.cadres.s, 'L espacement des cadres', 'mm');
-  if (!Number.isFinite(d.largeurAppui) || d.largeurAppui < 0) throw new Error('La largeur des appuis doit etre positive ou nulle (mm).');
-  if (d.aciers.zones.length !== nbZones) throw new Error('Un choix d aciers inferieurs par travee est attendu.');
+  if (!Number.isFinite(d.largeurAppui) || d.largeurAppui < 0) throw new Error('La largeur des appuis doit être positive ou nulle (mm).');
+  if (d.aciers.zones.length !== nbZones) throw new Error("Un choix d'aciers inférieurs par travée est attendu.");
   if (d.aciers.appuis.length !== nbAppuis) throw new Error('Un choix de chapeaux par appui est attendu.');
 }
 
@@ -485,11 +485,11 @@ export function calculerBetonArme(
     if (besoin !== null && Mmax > 1e-9) {
       const l = l_bd_inf / MM_PAR_M;
       renforts = { necessaire: besoin, de: Math.max(z.x0, besoin[0] - l), a: Math.min(z.x1, besoin[1] + l) };
-      if (Ar === 0) avertissements.push(`${z.nom} : les filants ne couvrent pas l epure decalee ; des renforts sont necessaires.`);
+      if (Ar === 0) avertissements.push(`${z.nom} : les filants ne couvrent pas l'épure décalée ; des renforts sont nécessaires.`);
     }
     const part = Af + Ar > 0 ? Af / (Af + Ar) : null;
     if (z.nom.startsWith('travee') && part !== null && part < 0.25) {
-      avertissements.push(`${z.nom} : ${Math.round(part * 100)} % seulement des aciers inferieurs prolonges sur appui, moins des 25 % du §9.2.1.4(1) et du §9.2.1.5(1).`);
+      avertissements.push(`${z.nom} : ${Math.round(part * 100)} % seulement des aciers inférieurs prolongés sur appui, moins des 25 % du §9.2.1.4(1) et du §9.2.1.5(1).`);
     }
     return { zone: z, flexion: fl, M_Rd_filants: MRd_f, renforts, part_filants: part, tranchant: [] };
   });
@@ -506,7 +506,7 @@ export function calculerBetonArme(
     if (besoin !== null) {
       const l = l_bd_sup / MM_PAR_M;
       chapeaux = { necessaire: besoin, de: Math.max(0, besoin[0] - l), a: Math.min(cas.poutre.longueur, besoin[1] + l) };
-      if (chap === 0) avertissements.push(`Appui A${i + 1} : les aciers de montage ne couvrent pas l epure decalee ; des chapeaux sont necessaires.`);
+      if (chap === 0) avertissements.push(`Appui A${i + 1} : les aciers de montage ne couvrent pas l'épure décalée ; des chapeaux sont nécessaires.`);
     }
     // Appui d'extremite : une seule zone voisine, une travee.
     const zg = cas.zones.findIndex((z) => Math.abs(z.x1 - a.x) < TOLERANCE_X);
@@ -525,7 +525,7 @@ export function calculerBetonArme(
       const phi = aciers.zones[j].filants?.phi ?? 12;
       const l_requise = As_prov > 0 ? longueurAncrage(c, phi, d.a_inf, Math.min(fyd, (F_E * N_PAR_KN) / As_prov)) : NaN;
       ancrage = { F_E, As_req, As_prov, l_requise };
-      if (As_prov < As_req) avertissements.push(`Appui A${i + 1} : les filants inferieurs (${nombreAffiche(As_prov, 0)} mm2) n ancrent pas F_E = ${nombreAffiche(F_E, 1)} kN (${nombreAffiche(As_req, 0)} mm2 requis, §9.2.1.4(2)).`);
+      if (As_prov < As_req) avertissements.push(`Appui A${i + 1} : les filants inférieurs (${nombreAffiche(As_prov, 0)} mm2) n'ancrent pas F_E = ${nombreAffiche(F_E, 1)} kN (${nombreAffiche(As_req, 0)} mm2 requis, §9.2.1.4(2)).`);
       if (d.extremitesMonolithiques) {
         const M = profil.beta_1.valeur * Math.max(0, elu.travees[j].M_max.valeur);
         const f = M > 0 ? flexion(c, M, -1, 1, null) : null;
@@ -558,13 +558,13 @@ export function calculerBetonArme(
   }
   for (const p of epure) {
     if (p.Mdec_max > p.MRd_inf + 1e-6) {
-      avertissements.push(`Epure : a x = ${nombreAffiche(p.x, 2)} m, le moment decale ${nombreAffiche(p.Mdec_max, 1)} kN.m depasse le moment resistant des aciers inferieurs ${nombreAffiche(p.MRd_inf, 1)} kN.m.`);
+      avertissements.push(`Epure : à x = ${nombreAffiche(p.x, 2)} m, le moment décalé ${nombreAffiche(p.Mdec_max, 1)} kN.m dépasse le moment résistant des aciers inférieurs ${nombreAffiche(p.MRd_inf, 1)} kN.m.`);
       break;
     }
   }
   for (const p of epure) {
     if (p.Mdec_min < p.MRd_sup - 1e-6) {
-      avertissements.push(`Epure : a x = ${nombreAffiche(p.x, 2)} m, le moment decale ${nombreAffiche(p.Mdec_min, 1)} kN.m depasse le moment resistant des aciers superieurs ${nombreAffiche(p.MRd_sup, 1)} kN.m.`);
+      avertissements.push(`Epure : à x = ${nombreAffiche(p.x, 2)} m, le moment décalé ${nombreAffiche(p.Mdec_min, 1)} kN.m dépasse le moment résistant des aciers supérieurs ${nombreAffiche(p.MRd_sup, 1)} kN.m.`);
       break;
     }
   }
@@ -615,7 +615,7 @@ export function calculerBetonArme(
         V_Rd_s: avec.VRds,
         s_max: profil.s_l_max.valeur * dd,
       });
-      if (Vax > avec.VRdmax) avertissements.push(`${zb.zone.nom}, x = ${nombreAffiche(x)} m : V_Ed = ${nombreAffiche(Vax, 1)} kN depasse V_Rd,max = ${nombreAffiche(avec.VRdmax, 1)} kN ; les bielles cedent, agrandir la section.`);
+      if (Vax > avec.VRdmax) avertissements.push(`${zb.zone.nom}, x = ${nombreAffiche(x)} m : V_Ed = ${nombreAffiche(Vax, 1)} kN depasse V_Rd,max = ${nombreAffiche(avec.VRdmax, 1)} kN ; les bielles cèdent, agrandir la section.`);
     }
   }
 

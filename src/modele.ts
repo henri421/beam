@@ -80,8 +80,8 @@ export interface Poutre {
 
 /** Rigidite de flexion EI (kN.m2) depuis E (MPa) et I (cm4). */
 export function rigiditeFlexion(E: number, I: number): number {
-  positif(E, 'Le module d elasticite E', 'MPa');
-  positif(I, 'L inertie I', 'cm4');
+  positif(E, "Le module d'élasticité E", 'MPa');
+  positif(I, "L'inertie I", 'cm4');
   return E * I * KN_M2_PAR_MPA_CM4;
 }
 
@@ -89,15 +89,15 @@ export const LIBELLES_APPUI: Record<TypeAppui, string> = {
   'appui-simple': 'appui simple',
   encastrement: 'encastrement',
   glissiere: 'encastrement glissant',
-  'encastrement-elastique': 'encastrement elastique',
-  ressort: 'appui elastique (ressorts)',
+  'encastrement-elastique': 'encastrement élastique',
+  ressort: 'appui élastique (ressorts)',
 };
 
 export const LIBELLES_CHARGE: Record<TypeCharge, string> = {
   ponctuelle: 'force ponctuelle',
   moment: 'moment ponctuel',
-  repartie: 'charge repartie uniforme',
-  lineaire: 'charge triangulaire ou trapezoidale',
+  repartie: 'charge répartie uniforme',
+  lineaire: 'charge triangulaire ou trapézoïdale',
 };
 
 /**
@@ -140,17 +140,17 @@ export function degreHyperstatique(poutre: Poutre): number {
 
 function positif(valeur: number, nom: string, unite: string): void {
   if (!Number.isFinite(valeur) || valeur <= 0) {
-    throw new Error(`${nom} doit etre un nombre strictement positif (${unite}).`);
+    throw new Error(`${nom} doit être un nombre strictement positif (${unite}).`);
   }
 }
 
 function fini(valeur: number, nom: string, unite: string): void {
-  if (!Number.isFinite(valeur)) throw new Error(`${nom} doit etre un nombre (${unite}).`);
+  if (!Number.isFinite(valeur)) throw new Error(`${nom} doit être un nombre (${unite}).`);
 }
 
 function positifOuNul(valeur: number, nom: string, unite: string): void {
   if (!Number.isFinite(valeur) || valeur < 0) {
-    throw new Error(`${nom} doit etre un nombre positif ou nul (${unite}).`);
+    throw new Error(`${nom} doit être un nombre positif ou nul (${unite}).`);
   }
 }
 
@@ -172,42 +172,42 @@ export function verifierDonnees(poutre: Poutre): void {
   if (poutre.appuis.length === 0) throw new Error('La poutre doit comporter au moins un appui.');
 
   poutre.appuis.forEach((a, i) => {
-    const nom = `L abscisse de l appui ${i + 1}`;
+    const nom = `L'abscisse de l'appui ${i + 1}`;
     surLaPoutre(a.x, L, nom);
     if (a.type === 'appui-simple' || a.type === 'encastrement' || a.type === 'encastrement-elastique') {
-      fini(a.tassement, `Le tassement de l appui ${i + 1}`, 'mm');
+      fini(a.tassement, `Le tassement de l'appui ${i + 1}`, 'mm');
     }
     if (a.type === 'encastrement-elastique') {
-      positif(a.k_rotation, `La raideur en rotation de l appui ${i + 1}`, 'kN.m/rad');
+      positif(a.k_rotation, `La raideur en rotation de l'appui ${i + 1}`, 'kN.m/rad');
     }
     if (a.type === 'ressort') {
-      positifOuNul(a.k_vertical, `La raideur verticale de l appui ${i + 1}`, 'kN/m');
-      positifOuNul(a.k_rotation, `La raideur en rotation de l appui ${i + 1}`, 'kN.m/rad');
+      positifOuNul(a.k_vertical, `La raideur verticale de l'appui ${i + 1}`, 'kN/m');
+      positifOuNul(a.k_rotation, `La raideur en rotation de l'appui ${i + 1}`, 'kN.m/rad');
       if (a.k_vertical === 0 && a.k_rotation === 0) {
-        throw new Error(`L appui elastique ${i + 1} doit avoir une raideur verticale ou en rotation non nulle.`);
+        throw new Error(`L'appui élastique ${i + 1} doit avoir une raideur verticale ou en rotation non nulle.`);
       }
     }
   });
   for (let i = 0; i < poutre.appuis.length; i++) {
     for (let j = i + 1; j < poutre.appuis.length; j++) {
       if (Math.abs(poutre.appuis[i].x - poutre.appuis[j].x) < TOLERANCE_X) {
-        throw new Error(`Les appuis ${i + 1} et ${j + 1} sont a la meme abscisse (${nombreAffiche(poutre.appuis[i].x)} m) : les fusionner en un seul appui.`);
+        throw new Error(`Les appuis ${i + 1} et ${j + 1} sont à la même abscisse (${nombreAffiche(poutre.appuis[i].x)} m) : les fusionner en un seul appui.`);
       }
     }
   }
 
   poutre.rotules.forEach((x, i) => {
-    fini(x, `L abscisse de la rotule ${i + 1}`, 'm');
+    fini(x, `L'abscisse de la rotule ${i + 1}`, 'm');
     if (x <= TOLERANCE_X || x >= L - TOLERANCE_X) {
-      throw new Error(`La rotule ${i + 1} (${nombreAffiche(x)} m) doit etre strictement a l interieur de la poutre : une rotule d extremite ne change rien.`);
+      throw new Error(`La rotule ${i + 1} (${nombreAffiche(x)} m) doit être strictement à l'intérieur de la poutre : une rotule d'extrémité ne change rien.`);
     }
     poutre.rotules.forEach((y, j) => {
-      if (j > i && Math.abs(x - y) < TOLERANCE_X) throw new Error(`Les rotules ${i + 1} et ${j + 1} sont a la meme abscisse.`);
+      if (j > i && Math.abs(x - y) < TOLERANCE_X) throw new Error(`Les rotules ${i + 1} et ${j + 1} sont à la même abscisse.`);
     });
     poutre.appuis.forEach((a, j) => {
       if (Math.abs(a.x - x) < TOLERANCE_X && retientLaRotation(a)) {
         throw new Error(
-          `La rotule ${i + 1} coincide avec l appui ${j + 1} (${LIBELLES_APPUI[a.type]}) qui retient la rotation : on ne sait pas de quel cote il agit.`
+          `La rotule ${i + 1} coïncide avec l'appui ${j + 1} (${LIBELLES_APPUI[a.type]}) qui retient la rotation : on ne sait pas de quel côté il agit.`
         );
       }
     });
@@ -217,25 +217,25 @@ export function verifierDonnees(poutre: Poutre): void {
     const n = i + 1;
     switch (c.type) {
       case 'ponctuelle':
-        surLaPoutre(c.x, L, `L abscisse de la charge ${n}`);
+        surLaPoutre(c.x, L, `L'abscisse de la charge ${n}`);
         fini(c.P, `La force de la charge ${n}`, 'kN');
         break;
       case 'moment':
-        surLaPoutre(c.x, L, `L abscisse de la charge ${n}`);
+        surLaPoutre(c.x, L, `L'abscisse de la charge ${n}`);
         fini(c.M, `Le moment de la charge ${n}`, 'kN.m');
         if (poutre.rotules.some((x) => Math.abs(x - c.x) < TOLERANCE_X)) {
-          throw new Error(`Le moment ${n} est applique sur une rotule : le deplacer d un cote ou de l autre.`);
+          throw new Error(`Le moment ${n} est appliqué sur une rotule : le déplacer d'un côté ou de l'autre.`);
         }
         break;
       case 'repartie':
       case 'lineaire':
-        surLaPoutre(c.a, L, `Le debut de la charge ${n}`);
+        surLaPoutre(c.a, L, `Le début de la charge ${n}`);
         surLaPoutre(c.b, L, `La fin de la charge ${n}`);
-        if (c.b - c.a < TOLERANCE_X) throw new Error(`La charge ${n} doit avoir une fin strictement apres son debut.`);
-        if (c.type === 'repartie') fini(c.q, `L intensite de la charge ${n}`, 'kN/m');
+        if (c.b - c.a < TOLERANCE_X) throw new Error(`La charge ${n} doit avoir une fin strictement après son début.`);
+        if (c.type === 'repartie') fini(c.q, `L'intensité de la charge ${n}`, 'kN/m');
         else {
-          fini(c.q_a, `L intensite de debut de la charge ${n}`, 'kN/m');
-          fini(c.q_b, `L intensite de fin de la charge ${n}`, 'kN/m');
+          fini(c.q_a, `L'intensité de début de la charge ${n}`, 'kN/m');
+          fini(c.q_b, `L'intensité de fin de la charge ${n}`, 'kN/m');
         }
         break;
     }

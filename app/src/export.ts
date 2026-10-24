@@ -112,18 +112,18 @@ export function noteDeCalculHtml(note: NoteDeCalcul, styles: string): string {
   const hypotheses =
     note.hypotheses.length === 0
       ? ''
-      : `<h2>Hypotheses et limites</h2><ul>${note.hypotheses.map((h) => `<li>${notationHtml(h)}</li>`).join('')}</ul>`;
+      : `<h2>Hypothèses et limites</h2><ul>${note.hypotheses.map((h) => `<li>${notationHtml(h)}</li>`).join('')}</ul>`;
   return `<!doctype html>
 <html lang="fr"><head><meta charset="utf-8" />
 <title>Note de calcul — ${notationHtml(note.titre)}</title>
 <style>${styles}${STYLE_NOTE}</style></head>
 <body>
-<h1>Note de calcul — poutre continue, calcul elastique lineaire</h1>
+<h1>Note de calcul — poutre continue, calcul élastique linéaire</h1>
 <p class="date">${notationHtml(note.titre)} · ${notationHtml(note.date)}</p>
 ${avertissements}
-<h2>Donnees d entree</h2>${note.entrees.map(tableDuBloc).join('')}
-<h2>Schema et diagrammes</h2>${dessins}
-<h2>Resultats</h2>${note.resultats.map(tableDuBloc).join('')}
+<h2>Données d'entrée</h2>${note.entrees.map(tableDuBloc).join('')}
+<h2>Schéma et diagrammes</h2>${dessins}
+<h2>Résultats</h2>${note.resultats.map(tableDuBloc).join('')}
 ${hypotheses}
 <p class="pied">${AIDE_AU_CALCUL}</p>
 </body></html>`;

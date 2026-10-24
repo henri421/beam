@@ -132,10 +132,10 @@ type Vue = 'elu' | 'caracteristique' | 'frequente' | 'quasiPermanente' | 'direct
 
 const VUES: [Vue, string][] = [
   ['elu', 'Enveloppe ELU'],
-  ['caracteristique', 'Enveloppe ELS caracteristique'],
-  ['frequente', 'Enveloppe ELS frequente'],
+  ['caracteristique', 'Enveloppe ELS caractéristique'],
+  ['frequente', 'Enveloppe ELS fréquente'],
   ['quasiPermanente', 'Enveloppe ELS quasi permanente'],
-  ['direct', 'Charges caracteristiques G + Q, toutes travees chargees'],
+  ['direct', 'Charges caractéristiques G + Q, toutes travées chargées'],
 ];
 
 let modele: ModeleSaisie = modeleParDefaut();
@@ -281,7 +281,7 @@ function peindreResultat(c: Calcul): void {
   const L = c.poutre.longueur;
   if (vue === 'direct') {
     zones.choixDisposition.hidden = true;
-    peindreUnCas(c.direct, `<p class="note">Toutes les charges a leur valeur caracteristique (G + Q), sans coefficient, toutes travees chargees.</p>`);
+    peindreUnCas(c.direct, `<p class="note">Toutes les charges à leur valeur caractéristique (G + Q), sans coefficient, toutes travées chargées.</p>`);
   } else {
     const env = enveloppeDeLaVue(c, vue);
     const cas = vue === 'elu' ? c.comb.casELU : c.comb.cas;
@@ -298,8 +298,8 @@ function peindreResultat(c: Calcul): void {
       peindreUnCas(r, `<p class="note">${env.combinaison.nom} — disposition : ${libelleDisposition(env, cas.zones, d)}.</p>`, vue === 'elu');
     } else {
       zones.resume.innerHTML = resumeEnveloppe(env);
-      const graphes = [dessinEnveloppe(env, L, 'M', `${env.combinaison.nom} — moment flechissant`), dessinEnveloppe(env, L, 'V', `${env.combinaison.nom} — effort tranchant`)];
-      if (env.combinaison.etat === 'ELS') graphes.push(dessinEnveloppe(env, L, 'w', `${env.combinaison.nom} — fleche`));
+      const graphes = [dessinEnveloppe(env, L, 'M', `${env.combinaison.nom} — moment fléchissant`), dessinEnveloppe(env, L, 'V', `${env.combinaison.nom} — effort tranchant`)];
+      if (env.combinaison.etat === 'ELS') graphes.push(dessinEnveloppe(env, L, 'w', `${env.combinaison.nom} — flèche`));
       zones.diagrammes.innerHTML = graphes.join('');
       zones.reactions.innerHTML = tableauEnveloppeAppuis(env, cas.zones);
       zones.travees.innerHTML = tableauEnveloppeTravees(env, cas.zones);
@@ -480,7 +480,7 @@ document.addEventListener('click', (evenement) => {
   const action = cible.dataset.action;
   if (action === undefined || !action.startsWith('exporter-')) return;
   if (calcul === null) {
-    montrer(zones.erreurCalcul, 'Aucun calcul a exporter : lancer le calcul, puis reessayer.');
+    montrer(zones.erreurCalcul, 'Aucun calcul à exporter : lancer le calcul, puis réessayer.');
     return;
   }
   const c = calcul;
@@ -495,7 +495,7 @@ document.addEventListener('click', (evenement) => {
     telecharger('poutre-valeurs.csv', csv(valeursLeLongDeLaPoutre(c.direct)), 'text/csv;charset=utf-8');
   } else if (action === 'exporter-note') {
     const avertissements = [
-      ...(zones.perime.hidden ? [] : ['Les donnees saisies ont change depuis ce calcul : la note decrit le dernier calcul lance.']),
+      ...(zones.perime.hidden ? [] : ['Les données saisies ont changé depuis ce calcul : la note décrit le dernier calcul lancé.']),
       ...avertissementsDuCalcul(c),
     ];
     const html = noteDeCalculHtml(

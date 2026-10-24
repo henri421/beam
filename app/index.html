@@ -21,7 +21,7 @@
     <header>
       <h1>poutres-continues</h1>
       <p class="sous-titre">
-        Reactions, moments flechissants, efforts tranchants et deformee d'une poutre droite continue ou hyperstatique :
+        Réactions, moments fléchissants, efforts tranchants et déformée d'une poutre droite continue ou hyperstatique :
         appuis simples, encastrements, encastrements glissants, ressorts, rotules et tassements d'appui.
       </p>
       <p class="avertissement">
@@ -71,14 +71,14 @@
             <div data-role="charges"></div>
             <div class="boutons">
               <button type="button" data-action="ajouter" data-liste="charges" data-type="ponctuelle">+ ponctuelle</button>
-              <button type="button" data-action="ajouter" data-liste="charges" data-type="repartie">+ repartie</button>
+              <button type="button" data-action="ajouter" data-liste="charges" data-type="repartie">+ répartie</button>
               <button type="button" data-action="ajouter" data-liste="charges" data-type="lineaire">+ triangulaire</button>
               <button type="button" data-action="ajouter" data-liste="charges" data-type="moment">+ moment</button>
             </div>
             <p class="note">
-              Forces et charges reparties positives vers le bas ; moment positif dans le sens trigonometrique
-              (&#8634;). Une charge triangulaire va de q<sub>a</sub> en a a q<sub>b</sub> en b : avec deux valeurs non
-              nulles, elle est trapezoidale.
+              Forces et charges réparties positives vers le bas ; moment positif dans le sens trigonométrique
+              (&#8634;). Une charge triangulaire va de q<sub>a</sub> en a à q<sub>b</sub> en b : avec deux valeurs non
+              nulles, elle est trapézoïdale.
             </p>
           </fieldset>
 
@@ -95,15 +95,15 @@
             <label><span>&psi;<sub>2</sub> de Q</span><input type="text" inputmode="decimal" data-champ="comb.psi2" /></label>
             <label><span>&gamma; des tassements (ELU)</span><input type="text" inputmode="decimal" data-champ="comb.gamma_T" /></label>
             <p class="note">
-              G : &gamma;<sub>G</sub> = 1,35 ou 1,00 sur toute la poutre ; Q : &gamma;<sub>Q</sub> = 1,5, placee
-              travee par travee la ou elle est defavorable. Les &psi; dependent de la categorie d'usage (EN 1990
+              G : &gamma;<sub>G</sub> = 1,35 ou 1 sur toute la poutre ; Q : &gamma;<sub>Q</sub> = 1,5, placée
+              travée par travée là où elle est défavorable. Les &psi; dépendent de la catégorie d'usage (EN 1990
               tableau A1.1) ; &gamma; des tassements selon le mode d'analyse (EN 1992-1-1 §2.3.1.3).
             </p>
           </fieldset>
 
           <fieldset>
-            <legend>Beton arme &middot; EN 1992-1-1</legend>
-            <label class="case"><input type="checkbox" data-champ="ba.actif" /><span>dimensionner en beton arme</span></label>
+            <legend>Béton armé &middot; EN 1992-1-1</legend>
+            <label class="case"><input type="checkbox" data-champ="ba.actif" /><span>dimensionner en béton armé</span></label>
             <div class="groupe" data-groupe="ba">
               <label><span>Section</span>
                 <select data-champ="ba.forme">
@@ -119,7 +119,7 @@
               </div>
               <label><span>f<sub>ck</sub> (MPa)</span><input type="text" inputmode="decimal" data-champ="ba.fck" /></label>
               <label><span>f<sub>yk</sub> (MPa)</span><input type="text" inputmode="decimal" data-champ="ba.fyk" /></label>
-              <label><span>Classe de ductilite</span>
+              <label><span>Classe de ductilité</span>
                 <select data-champ="ba.classe">
                   <option value="A">A</option>
                   <option value="B">B</option>
@@ -128,21 +128,21 @@
               </label>
               <label><span>a<sub>inf</sub>, fibre &rarr; axe aciers bas (mm)</span><input type="text" inputmode="decimal" data-champ="ba.a_inf" /></label>
               <label><span>a<sub>sup</sub>, fibre &rarr; axe aciers hauts (mm)</span><input type="text" inputmode="decimal" data-champ="ba.a_sup" /></label>
-              <label><span>cot &theta; (1 a 2,5)</span><input type="text" inputmode="decimal" data-champ="ba.cotTheta" /></label>
+              <label><span>cot &theta; (1 à 2,5)</span><input type="text" inputmode="decimal" data-champ="ba.cotTheta" /></label>
               <label><span>Cadres : &Oslash; (mm)</span><input type="text" inputmode="decimal" data-champ="ba.cadre_phi" /></label>
               <label><span>Cadres : nombre de brins</span><input type="text" inputmode="decimal" data-champ="ba.cadre_brins" /></label>
               <label><span>Cadres : espacement s (mm)</span><input type="text" inputmode="decimal" data-champ="ba.cadre_s" /></label>
               <label><span>Largeur des appuis (mm)</span><input type="text" inputmode="decimal" data-champ="ba.largeurAppui" /></label>
-              <label class="case"><input type="checkbox" data-champ="ba.monolithique" /><span>appuis d'extremite monolithiques (§9.2.1.2)</span></label>
+              <label class="case"><input type="checkbox" data-champ="ba.monolithique" /><span>appuis d'extrémité monolithiques (§9.2.1.2)</span></label>
               <label><span>Aciers hauts filants (montage)</span><input type="text" data-champ="ba.montage" placeholder="2HA12" /></label>
-              <p class="note">Aciers choisis : ecrire 3HA16, 2x12&hellip; Vide : aucun. Le coefficient &delta; de redistribution se saisit sur chaque appui intermediaire.</p>
+              <p class="note">Aciers choisis : écrire 3HA16, 2x12&hellip; Vide : aucun. Le coefficient &delta; de redistribution se saisit sur chaque appui intermédiaire.</p>
               <div data-role="ferraillage"></div>
             </div>
           </fieldset>
 
           <fieldset>
             <legend>Acier &middot; EN 1993-1-1</legend>
-            <label class="case"><input type="checkbox" data-champ="acier.actif" /><span>verifier une poutre metallique</span></label>
+            <label class="case"><input type="checkbox" data-champ="acier.actif" /><span>vérifier une poutre métallique</span></label>
             <div class="groupe" data-groupe="acier">
               <label><span>Profil</span><select data-champ="acier.profil" data-role="profils"></select></label>
               <label><span>Nuance</span>
@@ -155,12 +155,12 @@
                 </select>
               </label>
               <label class="case"><input type="checkbox" data-champ="acier.poidsPropre" /><span>ajouter le poids propre du profil aux charges G</span></label>
-              <label class="case"><input type="checkbox" data-champ="acier.empeche" /><span>deversement empeche (maintien continu de la membrure comprimee)</span></label>
-              <label><span>Fleche limite L / n, n =</span><input type="text" inputmode="decimal" data-champ="acier.flecheLimite" /></label>
+              <label class="case"><input type="checkbox" data-champ="acier.empeche" /><span>déversement empêché (maintien continu de la membrure comprimée)</span></label>
+              <label><span>Flèche limite L / n, n =</span><input type="text" inputmode="decimal" data-champ="acier.flecheLimite" /></label>
               <p class="note">
-                EI est tire du profil (E = 210 000 MPa, I<sub>y</sub>) : les champs E et I ci-dessus sont ignores. Par zone,
-                la longueur entre maintiens lateraux (vide : longueur de la zone) et, si on l'a calcule par ailleurs,
-                M<sub>cr</sub> ; sinon M<sub>cr</sub> est pris avec C<sub>1</sub> = 1, du cote de la securite.
+                EI est tiré du profil (E = 210 000 MPa, I<sub>y</sub>) : les champs E et I ci-dessus sont ignorés. Par zone,
+                la longueur entre maintiens latéraux (vide : longueur de la zone) et, si on l'a calculé par ailleurs,
+                M<sub>cr</sub> ; sinon M<sub>cr</sub> est pris avec C<sub>1</sub> = 1, du côté de la sécurité.
               </p>
               <div data-role="acier-zones"></div>
             </div>
@@ -169,24 +169,24 @@
           <p data-role="erreur-saisie" class="erreur" role="alert" hidden></p>
           <div class="boutons boutons-calcul">
             <button type="submit" class="principal">Calculer</button>
-            <button type="button" data-action="enregistrer">Enregistrer le modele</button>
+            <button type="button" data-action="enregistrer">Enregistrer le modèle</button>
             <label class="bouton-fichier"
-              ><input type="file" accept=".json,application/json" data-role="ouvrir" hidden /><span>Ouvrir un modele</span></label
+              ><input type="file" accept=".json,application/json" data-role="ouvrir" hidden /><span>Ouvrir un modèle</span></label
             >
           </div>
         </form>
       </section>
 
       <div class="colonne">
-        <section id="schema" aria-label="schema mecanique">
-          <h2>Schema mecanique</h2>
+        <section id="schema" aria-label="schéma mécanique">
+          <h2>Schéma mécanique</h2>
           <div data-role="schema"></div>
         </section>
 
         <section id="resultats" aria-label="resultats">
-          <h2>Resultats</h2>
+          <h2>Résultats</h2>
           <p data-role="perime" class="alerte" hidden>
-            Les donnees ont change depuis le dernier calcul : relancer le calcul.
+            Les données ont changé depuis le dernier calcul : relancer le calcul.
           </p>
           <p data-role="erreur-calcul" class="erreur" role="alert" hidden></p>
           <p data-role="attente" class="note">Renseigner la poutre, puis lancer le calcul.</p>
@@ -205,13 +205,13 @@
             <div data-role="diagrammes"></div>
             <h3>Appuis</h3>
             <div data-role="reactions"></div>
-            <h3>Travees</h3>
+            <h3>Travées</h3>
             <div data-role="travees"></div>
           </div>
         </section>
 
-        <section id="beton-arme" aria-label="beton arme" hidden>
-          <h2>Beton arme &middot; ELU</h2>
+        <section id="beton-arme" aria-label="béton armé" hidden>
+          <h2>Béton armé &middot; ELU</h2>
           <div data-role="ba-avertissements"></div>
           <div data-role="ba-corps"></div>
         </section>
@@ -227,12 +227,12 @@
           <div class="boutons">
             <label class="large"><span>Dessin</span><select data-role="dessin-a-exporter"></select></label>
             <button type="button" data-action="exporter-dessin">Dessin choisi (SVG)</button>
-            <button type="button" data-action="exporter-resultats">Resultats (CSV)</button>
+            <button type="button" data-action="exporter-resultats">Résultats (CSV)</button>
             <button type="button" data-action="exporter-valeurs">Valeurs le long de la poutre (CSV)</button>
             <button type="button" data-action="exporter-note">Note de calcul (HTML imprimable)</button>
           </div>
           <p class="note">
-            La note s'ouvre dans un onglet et s'imprime en PDF par le navigateur. Le modele enregistre (JSON) se rouvre
+            La note s'ouvre dans un onglet et s'imprime en PDF par le navigateur. Le modèle enregistré (JSON) se rouvre
             tel quel dans l'outil.
           </p>
         </section>
@@ -241,10 +241,10 @@
 
     <footer>
       <p>
-        Methode des deplacements, elements de poutre d'Euler-Bernoulli ; solution exacte entre noeuds (charges au plus
-        lineaires) ; enveloppes exactes par superposition des cas G, Q par travee et tassements. Hors perimetre :
-        inertie variable, deformation d'effort tranchant, effort normal et second ordre, appuis unilateraux,
-        plusieurs actions variables, fleche fissuree, torsion.
+        Méthode des déplacements, éléments de poutre d'Euler-Bernoulli ; solution exacte entre nœuds (charges au plus
+        linéaires) ; enveloppes exactes par superposition des cas G, Q par travée et tassements. Hors périmètre :
+        inertie variable, déformation d'effort tranchant, effort normal et second ordre, appuis unilatéraux,
+        plusieurs actions variables, flèche fissurée, torsion.
       </p>
     </footer>
 

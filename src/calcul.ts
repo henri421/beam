@@ -217,7 +217,7 @@ export function calculerPoutre(poutre: Poutre, options: { noeuds?: number[] } = 
   const degre = degreHyperstatique(poutre);
   if (degre < 0) {
     throw new Error(
-      `Poutre hypostatique (degre ${degre}) : elle forme un mecanisme. Ajouter un appui ou une liaison, ou retirer une rotule.`
+      `Poutre hypostatique (degré ${degre}) : elle forme un mécanisme. Ajouter un appui ou une liaison, ou retirer une rotule.`
     );
   }
 
@@ -309,7 +309,7 @@ export function calculerPoutre(poutre: Poutre, options: { noeuds?: number[] } = 
   } catch (e) {
     if (e instanceof MatriceSinguliere) {
       throw new Error(
-        'Poutre instable : la position des appuis et des rotules forme un mecanisme (par exemple deux rotules dans une meme travee, ou une console terminee par une rotule). Ajouter un appui ou retirer une rotule.'
+        'Poutre instable : la position des appuis et des rotules forme un mécanisme (par exemple deux rotules dans une même travée, ou une console terminée par une rotule). Ajouter un appui ou retirer une rotule.'
       );
     }
     throw e;

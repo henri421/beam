@@ -123,7 +123,7 @@ function maxAbs(a: number, b: number): number {
  */
 export function calculerAcier(zones: readonly Zone[], elu: Enveloppe, caracteristique: Enveloppe, d: DonneesAcier): ResultatAcier {
   if (!(Number.isFinite(d.flecheLimite) && d.flecheLimite > 0)) {
-    throw new Error('La fleche limite L / n doit avoir un n strictement positif (-).');
+    throw new Error('La flèche limite L / n doit avoir un n strictement positif (-).');
   }
   const profil = caracteristiquesProfil(d.profil);
   const section = profilCatalogue(d.profil);
@@ -190,11 +190,11 @@ export function calculerAcier(zones: readonly Zone[], elu: Enveloppe, caracteris
 
   if (!d.deversementEmpeche) {
     avertissements.push(
-      'Deversement avec C1 = 1 (moment uniforme) sur la longueur entre maintiens saisie : du cote de la securite. ' +
-        'Un M_cr calcule par ailleurs peut etre saisi par zone.'
+      'Déversement avec C1 = 1 (moment uniforme) sur la longueur entre maintiens saisie : du côté de la sécurité. ' +
+        'Un M_cr calculé par ailleurs peut être saisi par zone.'
     );
   }
-  avertissements.push('M_Ed et V_Ed : maximums de la zone pris ensemble pour l interaction M-V (sens de la securite).');
+  avertissements.push("M_Ed et V_Ed : maximums de la zone pris ensemble pour l'interaction M-V (sens de la sécurité).");
 
   const incomplet = resultats.some((z) => z.element === null);
   const refus = resultats.some(
