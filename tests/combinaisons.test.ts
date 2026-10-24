@@ -140,9 +140,9 @@ describe('redistribution', () => {
 
   it('controles du §5.5(4)', () => {
     expect(() => calculerCombinaisons(troisTravees(), donnees({ redistribution: [1, 0.6, 1, 1] }), P)).toThrow(/minimum 0.7/);
-    expect(() => calculerCombinaisons(troisTravees(), donnees({ redistribution: [0.9, 1, 1, 1] }), P)).toThrow(/intermediaires/);
+    expect(() => calculerCombinaisons(troisTravees(), donnees({ redistribution: [0.9, 1, 1, 1] }), P)).toThrow(/intermédiaires/);
     const inegales = poutre(15, [appuiSimple(0), appuiSimple(2), appuiSimple(15)], [{ type: 'repartie', a: 0, b: 15, q: 1 }]);
-    expect(() => calculerCombinaisons(inegales, donnees({ redistribution: [1, 0.9, 1] }), P)).toThrow(/rapport des portees/);
+    expect(() => calculerCombinaisons(inegales, donnees({ redistribution: [1, 0.9, 1] }), P)).toThrow(/rapport des portées/);
   });
 });
 
@@ -150,6 +150,6 @@ describe('profil', () => {
   it('une valeur sans source bloque le calcul', () => {
     const p = profilRecommande();
     p.gamma_Q = { valeur: 1.5, source: ' ' };
-    expect(() => verifierProfil(p)).toThrow(/gamma_Q n a pas de source/);
+    expect(() => verifierProfil(p)).toThrow(/gamma_Q n'a pas de source/);
   });
 });

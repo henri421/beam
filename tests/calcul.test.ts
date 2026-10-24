@@ -228,7 +228,7 @@ describe('poutres hyperstatiques', () => {
 describe('controles', () => {
   it('poutre hypostatique par decompte : refusee', () => {
     expect(() => calculerPoutre(poutre(6, [appuiSimple(3)], [uniforme(0, 6, 1)]))).toThrow(/hypostatique/);
-    expect(() => calculerPoutre(poutre(6, [appuiSimple(0), appuiSimple(6)], [], [3]))).toThrow(/hypostatique \(degre -1\)/);
+    expect(() => calculerPoutre(poutre(6, [appuiSimple(0), appuiSimple(6)], [], [3]))).toThrow(/hypostatique \(degré -1\)/);
   });
 
   it('mecanisme local malgre un degre positif : refuse', () => {
@@ -241,9 +241,9 @@ describe('controles', () => {
   it('donnees incoherentes : refusees avec la grandeur nommee', () => {
     expect(() => calculerPoutre(poutre(0, [appuiSimple(0)], []))).toThrow(/longueur de la poutre L/);
     expect(() => calculerPoutre(poutre(6, [appuiSimple(0), appuiSimple(7)], []))).toThrow(/appui 2/);
-    expect(() => calculerPoutre(poutre(6, [appuiSimple(0), appuiSimple(0)], []))).toThrow(/meme abscisse/);
+    expect(() => calculerPoutre(poutre(6, [appuiSimple(0), appuiSimple(0)], []))).toThrow(/même abscisse/);
     expect(() => calculerPoutre(poutre(6, [appuiSimple(0), appuiSimple(6)], [uniforme(4, 2, 1)]))).toThrow(/fin strictement/);
-    expect(() => calculerPoutre(poutre(6, [encastrement(0), encastrement(3)], [], [3]))).toThrow(/rotule 1 coincide/);
+    expect(() => calculerPoutre(poutre(6, [encastrement(0), encastrement(3)], [], [3]))).toThrow(/rotule 1 coïncide/);
     expect(() =>
       calculerPoutre(poutre(6, [appuiSimple(0), appuiSimple(6)], [{ type: 'moment', x: 3, M: 1 }], [3]))
     ).toThrow(/sur une rotule/);

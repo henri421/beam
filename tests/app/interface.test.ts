@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { JETONS, valeursDesJetons } from 'aedificium-ui';
+import { JETONS, nombreAffiche, valeursDesJetons } from 'aedificium-ui';
 import { calculerBetonArme, calculerCombinaisons, calculerPoutre, profilRecommande } from '../../src/index';
 import {
   EXEMPLES,
@@ -39,7 +39,7 @@ describe('saisie', () => {
   it('un champ obligatoire vide est nomme', () => {
     const m = modeleParDefaut();
     m.charges[0].q = '';
-    expect(poutreDepuisModele(m)).toEqual({ ok: false, message: 'Charge 1, intensite q : nombre a renseigner.' });
+    expect(poutreDepuisModele(m)).toEqual({ ok: false, message: 'Charge 1, intensité q : nombre à renseigner.' });
   });
 
   it('une charge neuve couvre toute la poutre', () => {
@@ -92,7 +92,7 @@ describe('saisie', () => {
   it('le fichier de modele fait l aller-retour, un fichier etranger est refuse', () => {
     const m = EXEMPLES.gerber.modele;
     expect(modeleDepuisJson(modeleEnJson(m))).toEqual(m);
-    expect(() => modeleDepuisJson('{"format":"autre"}')).toThrow(/pas un modele/);
+    expect(() => modeleDepuisJson('{"format":"autre"}')).toThrow(/pas un modèle/);
     expect(() => modeleDepuisJson('pas du json')).toThrow(/illisible/);
     expect(() =>
       modeleDepuisJson(JSON.stringify({ format: 'poutres-continues', modele: { appuis: [{ type: 'pieu' }] } }))
@@ -108,12 +108,12 @@ describe('traces et sorties', () => {
   it('le schema porte appuis, ressorts et charges', () => {
     const svg = dessinSchema(r.poutre);
     expect(svg).toContain('class="ressort"');
-    expect(svg).toContain('25,00 kN/m');
-    expect(svg).toContain('30,00 kN·m');
+    expect(svg).toContain('25 kN/m');
+    expect(svg).toContain('30 kN·m');
   });
 
   it('chaque diagramme annote ses extremums', () => {
-    expect(dessinDiagramme(r, 'M')).toContain(r.travees[0].M_max.valeur.toFixed(2).replace('.', ','));
+    expect(dessinDiagramme(r, 'M')).toContain(nombreAffiche(r.travees[0].M_max.valeur, 2));
     expect(dessinDiagramme(r, 'V')).toContain('Effort tranchant');
     expect(dessinDiagramme(r, 'w')).toContain('class="deformee"');
   });
@@ -144,7 +144,7 @@ describe('traces et sorties', () => {
     );
     expect(html).toContain('Poutre &lt;test&gt;');
     expect(html).toContain('<div class="dessin"><svg></svg></div>');
-    expect(html).toContain('constate, il ne prescrit pas');
+    expect(html).not.toContain('constate, il ne prescrit pas');
   });
 });
 
