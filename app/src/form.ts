@@ -6,7 +6,7 @@
  * Tout ici est PUR — aucun `document`. Le cablage vit dans `main.ts`.
  */
 
-import { echapper, lireNombre } from 'aedificium-ui';
+import { echapper, lireNombre, nombreAffiche } from 'aedificium-ui';
 import { familles, type Nuance } from 'sections-ec3';
 import {
   caracteristiquesProfil,
@@ -549,7 +549,7 @@ export function lignesFerraillage(m: ModeleSaisie, zones: { nom: string; x0: num
     .map(
       (zone, j) =>
         `<div class="ligne"><div class="ligne-tete"><span class="ligne-num">${echapper(zone.nom)}</span>` +
-        `<span class="ligne-type">${zone.x0} – ${zone.x1} m, aciers inferieurs</span></div><div class="ligne-champs">` +
+        `<span class="ligne-type">${nombreAffiche(zone.x0)} – ${nombreAffiche(zone.x1)} m, aciers inferieurs</span></div><div class="ligne-champs">` +
         texte('ferraillage', j, 'filants', 'filants', m.ba.zones[j]?.filants ?? '') +
         texte('ferraillage', j, 'renforts', 'renforts', m.ba.zones[j]?.renforts ?? '') +
         `</div></div>`
@@ -559,7 +559,7 @@ export function lignesFerraillage(m: ModeleSaisie, zones: { nom: string; x0: num
     .map(
       (x, i) =>
         `<div class="ligne"><div class="ligne-tete"><span class="ligne-num">A${i + 1}</span>` +
-        `<span class="ligne-type">x = ${x} m, aciers superieurs</span></div><div class="ligne-champs">` +
+        `<span class="ligne-type">x = ${nombreAffiche(x)} m, aciers superieurs</span></div><div class="ligne-champs">` +
         texte('chapeaux', i, 'chapeaux', 'chapeaux', m.ba.chapeaux[i] ?? '') +
         `</div></div>`
     )
@@ -576,8 +576,8 @@ export function lignesAcier(m: ModeleSaisie, zones: { nom: string; x0: number; x
     .map(
       (zone, j) =>
         `<div class="ligne"><div class="ligne-tete"><span class="ligne-num">${echapper(zone.nom)}</span>` +
-        `<span class="ligne-type">${zone.x0} – ${zone.x1} m</span></div><div class="ligne-champs">` +
-        champ(j, 'L_LT', 'L entre maintiens (m)', m.acier.zones[j]?.L_LT ?? '', String(zone.x1 - zone.x0)) +
+        `<span class="ligne-type">${nombreAffiche(zone.x0)} – ${nombreAffiche(zone.x1)} m</span></div><div class="ligne-champs">` +
+        champ(j, 'L_LT', 'L entre maintiens (m)', m.acier.zones[j]?.L_LT ?? '', nombreAffiche(zone.x1 - zone.x0)) +
         champ(j, 'Mcr', 'M_cr (kN.m)', m.acier.zones[j]?.Mcr ?? '', 'C1 = 1') +
         `</div></div>`
     )

@@ -32,6 +32,7 @@ import {
 } from './calcul';
 import { MM_PAR_M, TOLERANCE_X, type Appui, type Charge, type Poutre } from './modele';
 import { verifierProfil, type ProfilPoutre } from './norms/profil';
+import { nombreAffiche } from './nombres';
 
 export type Formule = '6.10' | '6.10ab';
 
@@ -299,7 +300,7 @@ export function verifierRedistribution(p: Poutre, deltas: number[], profil: Prof
     const n = i + 1;
     if (!Number.isFinite(delta) || delta > 1) throw new Error(`Appui ${n} : le coefficient de redistribution delta doit etre au plus 1.`);
     if (delta < minimum) {
-      throw new Error(`Appui ${n} : delta = ${delta} est inferieur au minimum ${minimum} des aciers de classe ${classeAcier} (§5.5(4)).`);
+      throw new Error(`Appui ${n} : delta = ${nombreAffiche(delta)} est inferieur au minimum ${nombreAffiche(minimum)} des aciers de classe ${classeAcier} (§5.5(4)).`);
     }
     const x = p.appuis[i].x;
     const g = zones.find((z) => Math.abs(z.x1 - x) < TOLERANCE_X && z.nom.startsWith('travee'));
@@ -310,7 +311,7 @@ export function verifierRedistribution(p: Poutre, deltas: number[], profil: Prof
     const rapport = (g.x1 - g.x0) / (d.x1 - d.x0);
     if (rapport < 0.5 || rapport > 2) {
       throw new Error(
-        `Appui ${n} : rapport des portees voisines ${rapport.toFixed(2)} hors de [0,5 ; 2] ; le §5.5(4) n autorise pas la redistribution sans verification de la capacite de rotation.`
+        `Appui ${n} : rapport des portees voisines ${nombreAffiche(rapport, 2)} hors de [0,5 ; 2] ; le §5.5(4) n autorise pas la redistribution sans verification de la capacite de rotation.`
       );
     }
   });

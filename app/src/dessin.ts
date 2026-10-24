@@ -6,7 +6,7 @@
  * endroit dans chacun.
  */
 
-import { echapper, nombreFr, notationSvg } from 'aedificium-ui';
+import { echapper, nombreAffiche, notationSvg } from 'aedificium-ui';
 import {
   libelleLit,
   type AciersChoisis,
@@ -35,7 +35,7 @@ function f(v: number): string {
 
 /** Abscisse en m, a la francaise, sans zeros inutiles. */
 export function cote(x: number): string {
-  return nombreFr(Math.round(x * 1000) / 1000, 3).replace(/,?0+$/, '');
+  return nombreAffiche(x, 3);
 }
 
 /**
@@ -151,7 +151,7 @@ function arcDeMoment(X: number, M: number): string {
   const nx = -ty;
   const ny = tx;
   const tete = `<path class="moment-tete" d="M ${f(xb + tx * 7)} ${f(yb + ty * 7)} L ${f(xb + nx * 4)} ${f(yb + ny * 4)} L ${f(xb - nx * 4)} ${f(yb - ny * 4)} Z"/>`;
-  return arc + tete + texteBorne(X, y - r - 6, `${nombreFr(Math.abs(M), 2)} kN·m`);
+  return arc + tete + texteBorne(X, y - r - 6, `${nombreAffiche(Math.abs(M), 2)} kN·m`);
 }
 
 function chargesReparties(charges: Charge[], X: (x: number) => number): { svg: string; niveaux: number } {
@@ -185,7 +185,7 @@ function chargesReparties(charges: Charge[], X: (x: number) => number): { svg: s
       if (h < 5) continue;
       s += q >= 0 ? fleche(x, base - h, base, 'charge-fleche') : fleche(x, base, base - h, 'charge-fleche');
     }
-    const libelle = c.type === 'repartie' || qa === qb ? `q = ${nombreFr(qa, 2)}` : `${nombreFr(qa, 2)} → ${nombreFr(qb, 2)}`;
+    const libelle = c.type === 'repartie' || qa === qb ? `q = ${nombreAffiche(qa, 2)}` : `${nombreAffiche(qa, 2)} → ${nombreAffiche(qb, 2)}`;
     s += texteBorne((xa + xb) / 2, base - Math.max(ha, hb) - 4, `${libelle} kN/m`);
   }
   return { svg: s, niveaux: niveaux.length };
@@ -205,7 +205,7 @@ export function dessinSchema(p: Poutre): string {
     if (c.type === 'ponctuelle') {
       const x = X(c.x);
       corps += c.P >= 0 ? fleche(x, Y_POUTRE - 58, Y_POUTRE - 2, 'force') : fleche(x, Y_POUTRE - 2, Y_POUTRE - 58, 'force');
-      corps += texteBorne(x, Y_POUTRE - 62, `${nombreFr(Math.abs(c.P), 2)} kN`);
+      corps += texteBorne(x, Y_POUTRE - 62, `${nombreAffiche(Math.abs(c.P), 2)} kN`);
     }
     if (c.type === 'moment') corps += arcDeMoment(X(c.x), c.M);
   }
@@ -329,7 +329,7 @@ export function dessinDiagramme(r: ResultatPoutre, g: Grandeur): string {
     const dessous = y >= y0;
     const x = Math.min(Math.max(X(e.x), MARGE_G - 20), LARGEUR - 20);
     corps += `<circle class="point" cx="${f(X(e.x))}" cy="${f(y)}" r="2.2"/>`;
-    corps += `<text class="valeur" x="${f(x)}" y="${f(dessous ? y + 13 : y - 5)}" text-anchor="middle">${notationSvg(nombreFr(e.valeur, d.decimales))}</text>`;
+    corps += `<text class="valeur" x="${f(x)}" y="${f(dessous ? y + 13 : y - 5)}" text-anchor="middle">${notationSvg(nombreAffiche(e.valeur, d.decimales))}</text>`;
   }
   const hauteur = y0 + H + 22;
   const legende =
@@ -373,7 +373,7 @@ export function dessinEnveloppe(env: Enveloppe, L: number, g: Grandeur, titre: s
     const y = Y(e.valeur);
     const x = Math.min(Math.max(X(e.x), MARGE_G - 20), LARGEUR - 20);
     corps += `<circle class="point" cx="${f(X(e.x))}" cy="${f(y)}" r="2.2"/>`;
-    corps += `<text class="valeur" x="${f(x)}" y="${f(y >= y0 ? y + 13 : y - 5)}" text-anchor="middle">${notationSvg(nombreFr(e.valeur, d.decimales))}</text>`;
+    corps += `<text class="valeur" x="${f(x)}" y="${f(y >= y0 ? y + 13 : y - 5)}" text-anchor="middle">${notationSvg(nombreAffiche(e.valeur, d.decimales))}</text>`;
   }
   const hauteur = y0 + H + 22;
   corps += `<text class="legende" x="${LARGEUR - MARGE_D}" y="16" text-anchor="end">${notationSvg('enveloppe : maximum en trait plein, minimum en tirets')}</text>`;
@@ -421,6 +421,6 @@ export function dessinEpure(ba: ResultatBA, L: number, aciers: AciersChoisis): s
     }
   });
   const hauteur = yb + 80;
-  corps += `<text class="legende" x="${MARGE_G}" y="${hauteur - 4}">${notationSvg(`longueurs d'ancrage comprises : l_bd = ${nombreFr(ba.l_bd_inf, 0)} mm (bas), ${nombreFr(ba.l_bd_sup, 0)} mm (haut) ; a_l = ${nombreFr(ba.a_l, 3)} m`)}</text>`;
+  corps += `<text class="legende" x="${MARGE_G}" y="${hauteur - 4}">${notationSvg(`longueurs d'ancrage comprises : l_bd = ${nombreAffiche(ba.l_bd_inf, 0)} mm (bas), ${nombreAffiche(ba.l_bd_sup, 0)} mm (haut) ; a_l = ${nombreAffiche(ba.a_l, 3)} m`)}</text>`;
   return `<svg class="trace" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${LARGEUR} ${hauteur}" role="img" aria-label="epure d arret des barres"><title>${notationSvg("Epure d'arret des barres")}</title>${corps}</svg>`;
 }

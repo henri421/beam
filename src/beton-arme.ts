@@ -43,6 +43,7 @@ import {
 } from 'dispositions-constructives';
 import { enveloppeEn, type CasCalcules, type Enveloppe, type Zone } from './combinaisons';
 import { MM_PAR_M, TOLERANCE_X } from './modele';
+import { nombreAffiche } from './nombres';
 import type { ProfilPoutre } from './norms/profil';
 
 /** Module d'elasticite des aciers (MPa), §3.2.7(4). */
@@ -524,7 +525,7 @@ export function calculerBetonArme(
       const phi = aciers.zones[j].filants?.phi ?? 12;
       const l_requise = As_prov > 0 ? longueurAncrage(c, phi, d.a_inf, Math.min(fyd, (F_E * N_PAR_KN) / As_prov)) : NaN;
       ancrage = { F_E, As_req, As_prov, l_requise };
-      if (As_prov < As_req) avertissements.push(`Appui A${i + 1} : les filants inferieurs (${As_prov.toFixed(0)} mm2) n ancrent pas F_E = ${F_E.toFixed(1)} kN (${As_req.toFixed(0)} mm2 requis, §9.2.1.4(2)).`);
+      if (As_prov < As_req) avertissements.push(`Appui A${i + 1} : les filants inferieurs (${nombreAffiche(As_prov, 0)} mm2) n ancrent pas F_E = ${nombreAffiche(F_E, 1)} kN (${nombreAffiche(As_req, 0)} mm2 requis, §9.2.1.4(2)).`);
       if (d.extremitesMonolithiques) {
         const M = profil.beta_1.valeur * Math.max(0, elu.travees[j].M_max.valeur);
         const f = M > 0 ? flexion(c, M, -1, 1, null) : null;
@@ -557,13 +558,13 @@ export function calculerBetonArme(
   }
   for (const p of epure) {
     if (p.Mdec_max > p.MRd_inf + 1e-6) {
-      avertissements.push(`Epure : a x = ${p.x.toFixed(2)} m, le moment decale ${p.Mdec_max.toFixed(1)} kN.m depasse le moment resistant des aciers inferieurs ${p.MRd_inf.toFixed(1)} kN.m.`);
+      avertissements.push(`Epure : a x = ${nombreAffiche(p.x, 2)} m, le moment decale ${nombreAffiche(p.Mdec_max, 1)} kN.m depasse le moment resistant des aciers inferieurs ${nombreAffiche(p.MRd_inf, 1)} kN.m.`);
       break;
     }
   }
   for (const p of epure) {
     if (p.Mdec_min < p.MRd_sup - 1e-6) {
-      avertissements.push(`Epure : a x = ${p.x.toFixed(2)} m, le moment decale ${p.Mdec_min.toFixed(1)} kN.m depasse le moment resistant des aciers superieurs ${p.MRd_sup.toFixed(1)} kN.m.`);
+      avertissements.push(`Epure : a x = ${nombreAffiche(p.x, 2)} m, le moment decale ${nombreAffiche(p.Mdec_min, 1)} kN.m depasse le moment resistant des aciers superieurs ${nombreAffiche(p.MRd_sup, 1)} kN.m.`);
       break;
     }
   }
@@ -614,7 +615,7 @@ export function calculerBetonArme(
         V_Rd_s: avec.VRds,
         s_max: profil.s_l_max.valeur * dd,
       });
-      if (Vax > avec.VRdmax) avertissements.push(`${zb.zone.nom}, x = ${x} m : V_Ed = ${Vax.toFixed(1)} kN depasse V_Rd,max = ${avec.VRdmax.toFixed(1)} kN ; les bielles cedent, agrandir la section.`);
+      if (Vax > avec.VRdmax) avertissements.push(`${zb.zone.nom}, x = ${nombreAffiche(x)} m : V_Ed = ${nombreAffiche(Vax, 1)} kN depasse V_Rd,max = ${nombreAffiche(avec.VRdmax, 1)} kN ; les bielles cedent, agrandir la section.`);
     }
   }
 

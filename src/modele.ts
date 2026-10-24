@@ -14,6 +14,8 @@
  * - tassement d'appui positif vers le bas.
  */
 
+import { nombreAffiche } from './nombres';
+
 /** Conversion d'un module en MPa et d'une inertie en cm4 vers EI en kN.m2. */
 export const KN_M2_PAR_MPA_CM4 = 1e-5;
 
@@ -155,7 +157,7 @@ function positifOuNul(valeur: number, nom: string, unite: string): void {
 function surLaPoutre(x: number, L: number, nom: string): void {
   fini(x, nom, 'm');
   if (x < -TOLERANCE_X || x > L + TOLERANCE_X) {
-    throw new Error(`${nom} (${x} m) doit se trouver sur la poutre, entre 0 et ${L} m.`);
+    throw new Error(`${nom} (${nombreAffiche(x)} m) doit se trouver sur la poutre, entre 0 et ${nombreAffiche(L)} m.`);
   }
 }
 
@@ -189,7 +191,7 @@ export function verifierDonnees(poutre: Poutre): void {
   for (let i = 0; i < poutre.appuis.length; i++) {
     for (let j = i + 1; j < poutre.appuis.length; j++) {
       if (Math.abs(poutre.appuis[i].x - poutre.appuis[j].x) < TOLERANCE_X) {
-        throw new Error(`Les appuis ${i + 1} et ${j + 1} sont a la meme abscisse (${poutre.appuis[i].x} m) : les fusionner en un seul appui.`);
+        throw new Error(`Les appuis ${i + 1} et ${j + 1} sont a la meme abscisse (${nombreAffiche(poutre.appuis[i].x)} m) : les fusionner en un seul appui.`);
       }
     }
   }
@@ -197,7 +199,7 @@ export function verifierDonnees(poutre: Poutre): void {
   poutre.rotules.forEach((x, i) => {
     fini(x, `L abscisse de la rotule ${i + 1}`, 'm');
     if (x <= TOLERANCE_X || x >= L - TOLERANCE_X) {
-      throw new Error(`La rotule ${i + 1} (${x} m) doit etre strictement a l interieur de la poutre : une rotule d extremite ne change rien.`);
+      throw new Error(`La rotule ${i + 1} (${nombreAffiche(x)} m) doit etre strictement a l interieur de la poutre : une rotule d extremite ne change rien.`);
     }
     poutre.rotules.forEach((y, j) => {
       if (j > i && Math.abs(x - y) < TOLERANCE_X) throw new Error(`Les rotules ${i + 1} et ${j + 1} sont a la meme abscisse.`);

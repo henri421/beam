@@ -34,7 +34,7 @@ export interface ProfilPoutre {
   alpha_ct: ValeurSourcee;
   /** Redistribution, §5.5(4) : delta >= k1 + k2 x_u/d (f_ck <= 50 MPa). */
   k1: ValeurSourcee;
-  /** Facteur de k2 = facteur_k2 (0,6 + 0,0014 / eps_cu2). */
+  /** Facteur de k2 = facteur_k2 (0,6 + 1,4 × 10⁻³ / eps_cu2). */
   facteur_k2: ValeurSourcee;
   /** delta >= k3 + k4 x_u/d (f_ck > 50 MPa). */
   k3: ValeurSourcee;
@@ -65,9 +65,9 @@ export function profilRecommande(): ProfilPoutre {
     alpha_cc: { valeur: 1.0, source: `${EC2}, §3.1.6(1)P` },
     alpha_ct: { valeur: 1.0, source: `${EC2}, §3.1.6(2)P` },
     k1: { valeur: 0.44, source: `${EC2}, §5.5(4)` },
-    facteur_k2: { valeur: 1.25, source: `${EC2}, §5.5(4), k2 = 1,25 (0,6 + 0,0014 / eps_cu2)` },
+    facteur_k2: { valeur: 1.25, source: `${EC2}, §5.5(4), k2 = 1,25 (0,6 + 1,4 × 10⁻³ / eps_cu2)` },
     k3: { valeur: 0.54, source: `${EC2}, §5.5(4)` },
-    facteur_k4: { valeur: 1.25, source: `${EC2}, §5.5(4), k4 = 1,25 (0,6 + 0,0014 / eps_cu2)` },
+    facteur_k4: { valeur: 1.25, source: `${EC2}, §5.5(4), k4 = 1,25 (0,6 + 1,4 × 10⁻³ / eps_cu2)` },
     k5: { valeur: 0.7, source: `${EC2}, §5.5(4)` },
     k6: { valeur: 0.8, source: `${EC2}, §5.5(4)` },
     beta_1: { valeur: 0.15, source: `${EC2}, §9.2.1.2(1)` },

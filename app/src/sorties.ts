@@ -5,7 +5,7 @@
  * Tout ici est PUR — aucun `document`. Le cablage vit dans `main.ts`.
  */
 
-import { nombreFr, type BlocResultat } from 'aedificium-ui';
+import { lireNombre, nombreAffiche, type BlocResultat } from 'aedificium-ui';
 import {
   LIBELLES_APPUI,
   LIBELLES_CHARGE,
@@ -34,6 +34,12 @@ import {
 } from './vue';
 
 export const PROFIL = profilRecommande();
+
+/** Nombre saisi, affiche a la francaise : 3 decimales au plus, sans zeros inutiles. */
+const affiche = (texte: string): string => {
+  const v = lireNombre(texte);
+  return v === null ? texte : nombreAffiche(v);
+};
 
 export interface Calcul {
   poutre: Poutre;
@@ -96,9 +102,9 @@ export function blocsDEntree(c: Calcul): BlocResultat[] {
       titre: 'Poutre',
       lignes: [
         { symbole: 'L', libelle: 'longueur totale', valeur: `${cote(p.longueur)} m` },
-        { symbole: 'E', libelle: 'module d elasticite', valeur: `${m.E} MPa` },
-        { symbole: 'I', libelle: 'inertie', valeur: `${m.I} cm4` },
-        { symbole: 'EI', libelle: 'rigidite de flexion', valeur: `${nombreFr(p.EI, 0)} kN.m2` },
+        { symbole: 'E', libelle: 'module d elasticite', valeur: `${affiche(m.E)} MPa` },
+        { symbole: 'I', libelle: 'inertie', valeur: `${affiche(m.I)} cm4` },
+        { symbole: 'EI', libelle: 'rigidite de flexion', valeur: `${nombreAffiche(p.EI, 0)} kN.m2` },
         { symbole: 'rotules', libelle: 'rotules internes', valeur: p.rotules.length === 0 ? 'aucune' : p.rotules.map((x) => `${cote(x)} m`).join(', ') },
       ],
       note: null,
@@ -107,9 +113,9 @@ export function blocsDEntree(c: Calcul): BlocResultat[] {
       titre: 'Appuis',
       lignes: p.appuis.map((a, i) => {
         const details: string[] = [`x = ${cote(a.x)} m`];
-        if ('tassement' in a && a.tassement !== 0) details.push(`tassement ${nombreFr(a.tassement, 2)} mm`);
-        if (a.type === 'ressort' && a.k_vertical > 0) details.push(`k_v = ${nombreFr(a.k_vertical, 0)} kN/m`);
-        if ((a.type === 'ressort' || a.type === 'encastrement-elastique') && a.k_rotation > 0) details.push(`k_theta = ${nombreFr(a.k_rotation, 0)} kN.m/rad`);
+        if ('tassement' in a && a.tassement !== 0) details.push(`tassement ${nombreAffiche(a.tassement, 2)} mm`);
+        if (a.type === 'ressort' && a.k_vertical > 0) details.push(`k_v = ${nombreAffiche(a.k_vertical, 0)} kN/m`);
+        if ((a.type === 'ressort' || a.type === 'encastrement-elastique') && a.k_rotation > 0) details.push(`k_theta = ${nombreAffiche(a.k_rotation, 0)} kN.m/rad`);
         return { symbole: `A${i + 1}`, libelle: LIBELLES_APPUI[a.type], valeur: details.join(', ') };
       }),
       note: null,
@@ -119,12 +125,12 @@ export function blocsDEntree(c: Calcul): BlocResultat[] {
       lignes: p.charges.map((ch, i) => {
         const valeur =
           ch.type === 'ponctuelle'
-            ? `P = ${nombreFr(ch.P, 2)} kN a x = ${cote(ch.x)} m`
+            ? `P = ${nombreAffiche(ch.P, 2)} kN a x = ${cote(ch.x)} m`
             : ch.type === 'moment'
-              ? `M = ${nombreFr(ch.M, 2)} kN.m a x = ${cote(ch.x)} m`
+              ? `M = ${nombreAffiche(ch.M, 2)} kN.m a x = ${cote(ch.x)} m`
               : ch.type === 'repartie'
-                ? `q = ${nombreFr(ch.q, 2)} kN/m de ${cote(ch.a)} a ${cote(ch.b)} m`
-                : `q = ${nombreFr(ch.q_a, 2)} a ${nombreFr(ch.q_b, 2)} kN/m de ${cote(ch.a)} a ${cote(ch.b)} m`;
+                ? `q = ${nombreAffiche(ch.q, 2)} kN/m de ${cote(ch.a)} a ${cote(ch.b)} m`
+                : `q = ${nombreAffiche(ch.q_a, 2)} a ${nombreAffiche(ch.q_b, 2)} kN/m de ${cote(ch.a)} a ${cote(ch.b)} m`;
         return { symbole: `C${i + 1} (${ch.cas ?? 'G'})`, libelle: LIBELLES_CHARGE[ch.type], valeur };
       }),
       note: p.charges.length === 0 ? 'Aucune charge.' : null,
@@ -133,11 +139,11 @@ export function blocsDEntree(c: Calcul): BlocResultat[] {
       titre: 'Combinaisons',
       lignes: [
         { symbole: 'ELU', libelle: 'expression', valeur: m.combinaisons.formule === '6.10' ? '(6.10)' : '(6.10a) et (6.10b)' },
-        { symbole: 'psi_0, psi_1, psi_2', libelle: 'coefficients de Q', valeur: `${m.combinaisons.psi0} ; ${m.combinaisons.psi1} ; ${m.combinaisons.psi2}` },
-        { symbole: 'gamma_T', libelle: 'coefficient des tassements a l ELU', valeur: m.combinaisons.gamma_T },
+        { symbole: 'psi_0, psi_1, psi_2', libelle: 'coefficients de Q', valeur: `${affiche(m.combinaisons.psi0)} ; ${affiche(m.combinaisons.psi1)} ; ${affiche(m.combinaisons.psi2)}` },
+        { symbole: 'gamma_T', libelle: 'coefficient des tassements a l ELU', valeur: affiche(m.combinaisons.gamma_T) },
         ...Object.entries(PROFIL)
           .filter(([, v]) => typeof v === 'object')
-          .map(([k, v]) => ({ symbole: k, libelle: (v as { source: string }).source, valeur: String((v as { valeur: number }).valeur) })),
+          .map(([k, v]) => ({ symbole: k, libelle: (v as { source: string }).source, valeur: nombreAffiche((v as { valeur: number }).valeur) })),
       ],
       note: `Profil : ${PROFIL.nom} (${PROFIL.date}).`,
     },
@@ -149,10 +155,10 @@ export function blocsDEntree(c: Calcul): BlocResultat[] {
       titre: 'Acier',
       lignes: [
         { symbole: 'profil', libelle: 'profil en I lamine, catalogue de sections-ec3', valeur: `${p.nom}, ${a.nuance}` },
-        { symbole: 'EI', libelle: 'E = 210 000 MPa, I_y du profil (remplace E et I saisis)', valeur: `${nombreFr(p.EI, 0)} kN.m2` },
-        { symbole: 'g', libelle: 'poids propre du profil', valeur: c.modele.acier.poidsPropre ? `${nombreFr(p.poids, 3)} kN/m, ajoute aux charges G` : 'non ajoute' },
+        { symbole: 'EI', libelle: 'E = 210 000 MPa, I_y du profil (remplace E et I saisis)', valeur: `${nombreAffiche(p.EI, 0)} kN.m2` },
+        { symbole: 'g', libelle: 'poids propre du profil', valeur: c.modele.acier.poidsPropre ? `${nombreAffiche(p.poids, 3)} kN/m, ajoute aux charges G` : 'non ajoute' },
         { symbole: 'deversement', libelle: 'maintien de la membrure comprimee', valeur: a.deversementEmpeche ? 'empeche' : 'longueurs entre maintiens par zone' },
-        { symbole: 'L / n', libelle: 'fleche limite', valeur: `L / ${a.flecheLimite}` },
+        { symbole: 'L / n', libelle: 'fleche limite', valeur: `L / ${nombreAffiche(a.flecheLimite)}` },
       ],
       note: null,
     });
@@ -162,10 +168,10 @@ export function blocsDEntree(c: Calcul): BlocResultat[] {
     blocs.push({
       titre: 'Beton arme',
       lignes: [
-        { symbole: 'section', libelle: s.forme === 'te' ? 'en T' : 'rectangulaire', valeur: s.forme === 'te' ? `b_w ${s.b_w}, h ${s.h}, b_eff ${s.b_eff}, h_f ${s.h_f} mm` : `${s.b_w} x ${s.h} mm` },
-        { symbole: 'f_ck / f_yk', libelle: 'materiaux', valeur: `${c.ba.donnees.fck} / ${c.ba.donnees.fyk} MPa, classe ${c.ba.donnees.classeAcier}` },
-        { symbole: 'a_inf / a_sup', libelle: 'distances fibres - axes des aciers', valeur: `${c.ba.donnees.a_inf} / ${c.ba.donnees.a_sup} mm` },
-        { symbole: 'cot theta', libelle: 'inclinaison des bielles', valeur: String(c.ba.donnees.cotTheta) },
+        { symbole: 'section', libelle: s.forme === 'te' ? 'en T' : 'rectangulaire', valeur: s.forme === 'te' ? `b_w ${nombreAffiche(s.b_w)}, h ${nombreAffiche(s.h)}, b_eff ${nombreAffiche(s.b_eff)}, h_f ${nombreAffiche(s.h_f)} mm` : `${nombreAffiche(s.b_w)} x ${nombreAffiche(s.h)} mm` },
+        { symbole: 'f_ck / f_yk', libelle: 'materiaux', valeur: `${nombreAffiche(c.ba.donnees.fck)} / ${nombreAffiche(c.ba.donnees.fyk)} MPa, classe ${c.ba.donnees.classeAcier}` },
+        { symbole: 'a_inf / a_sup', libelle: 'distances fibres - axes des aciers', valeur: `${nombreAffiche(c.ba.donnees.a_inf)} / ${nombreAffiche(c.ba.donnees.a_sup)} mm` },
+        { symbole: 'cot theta', libelle: 'inclinaison des bielles', valeur: nombreAffiche(c.ba.donnees.cotTheta) },
       ],
       note: null,
     });

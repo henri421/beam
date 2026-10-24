@@ -4,7 +4,7 @@
  * Tout ici est PUR — aucun `document`.
  */
 
-import { notationHtml, notationTexte, nombreFr, tauxFr, type BlocResultat } from 'aedificium-ui';
+import { notationHtml, notationTexte, nombreAffiche, tauxAffiche, type BlocResultat } from 'aedificium-ui';
 import {
   LIBELLES_APPUI,
   libelleDisposition,
@@ -28,8 +28,8 @@ export function messageDErreur(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
-const kN = (v: number): string => nombreFr(v, 2);
-const ou = (v: number | null, d = 2): string => (v === null ? '—' : nombreFr(v, d));
+const kN = (v: number): string => nombreAffiche(v, 2);
+const ou = (v: number | null, d = 2): string => (v === null ? '—' : nombreAffiche(v, d));
 
 function retientLeDeplacement(a: Appui): boolean {
   return a.type !== 'glissiere' && !(a.type === 'ressort' && a.k_vertical === 0);
@@ -40,7 +40,7 @@ function momentSurAppui(re: Reaction): string {
   const g = re.M_gauche;
   const d = re.M_droite;
   if (g === null || d === null || Math.abs(g - d) < 1e-9 * (1 + Math.abs(g))) return ou(g ?? d);
-  return `${nombreFr(g, 2)} / ${nombreFr(d, 2)}`;
+  return `${nombreAffiche(g, 2)} / ${nombreAffiche(d, 2)}`;
 }
 
 export function resume(r: ResultatPoutre): string {
@@ -50,14 +50,14 @@ export function resume(r: ResultatPoutre): string {
   return (
     `<table class="grandeurs"><tbody>` +
     `<tr><th>structure</th><td class="libelle">poutre ${nature}</td><td class="valeur">h = ${h}</td></tr>` +
-    `<tr><th>EI</th><td class="libelle">rigidite de flexion</td><td class="valeur">${nombreFr(r.poutre.EI, 0)} kN·m²</td></tr>` +
+    `<tr><th>EI</th><td class="libelle">rigidite de flexion</td><td class="valeur">${nombreAffiche(r.poutre.EI, 0)} kN·m²</td></tr>` +
     `<tr><th>&Sigma;F</th><td class="libelle">charges verticales (vers le bas)</td><td class="valeur">${kN(r.equilibre.charges)} kN</td></tr>` +
     `<tr><th>&Sigma;R</th><td class="libelle">reactions verticales (vers le haut)</td><td class="valeur">${kN(r.equilibre.reactions)} kN</td></tr>` +
-    `<tr><th>ecart</th><td class="libelle">controle d equilibre &Sigma;R - &Sigma;F</td><td class="valeur">${nombreFr(ecart, 6)} kN</td></tr>` +
+    `<tr><th>ecart</th><td class="libelle">controle d equilibre &Sigma;R - &Sigma;F</td><td class="valeur">${nombreAffiche(ecart, 3)} kN</td></tr>` +
     `<tr><th>M<sub>max</sub></th><td class="libelle">moment maximal, a x = ${cote(r.extremes.M_max.x)} m</td><td class="valeur">${kN(r.extremes.M_max.valeur)} kN·m</td></tr>` +
     `<tr><th>M<sub>min</sub></th><td class="libelle">moment minimal, a x = ${cote(r.extremes.M_min.x)} m</td><td class="valeur">${kN(r.extremes.M_min.valeur)} kN·m</td></tr>` +
     `<tr><th>|V|<sub>max</sub></th><td class="libelle">effort tranchant maximal, a x = ${cote(r.extremes.V_max.x)} m</td><td class="valeur">${kN(r.extremes.V_max.valeur)} kN</td></tr>` +
-    `<tr><th>|w|<sub>max</sub></th><td class="libelle">fleche maximale, a x = ${cote(r.extremes.w_max.x)} m</td><td class="valeur">${nombreFr(r.extremes.w_max.valeur, 2)} mm</td></tr>` +
+    `<tr><th>|w|<sub>max</sub></th><td class="libelle">fleche maximale, a x = ${cote(r.extremes.w_max.x)} m</td><td class="valeur">${nombreAffiche(r.extremes.w_max.valeur, 2)} mm</td></tr>` +
     `</tbody></table>`
   );
 }
@@ -72,7 +72,7 @@ export function tableauReactions(r: ResultatPoutre): string {
         `<td class="valeur">${retientLaRotation(a) ? kN(re.M_reaction) : '—'}</td>` +
         `<td class="valeur">${momentSurAppui(re)}</td>` +
         `<td class="valeur">${ou(re.V_gauche)}</td><td class="valeur">${ou(re.V_droite)}</td>` +
-        `<td class="valeur">${nombreFr(re.w, 2)}</td><td class="valeur">${nombreFr(re.rotation, 3)}</td></tr>`
+        `<td class="valeur">${nombreAffiche(re.w, 2)}</td><td class="valeur">${nombreAffiche(re.rotation, 3)}</td></tr>`
       );
     })
     .join('');
@@ -92,7 +92,7 @@ export function tableauTravees(r: ResultatPoutre): string {
         `<td class="valeur">${kN(t.M_max.valeur)} <span class="clause">x=${cote(t.M_max.x)}</span></td>` +
         `<td class="valeur">${kN(t.M_min.valeur)} <span class="clause">x=${cote(t.M_min.x)}</span></td>` +
         `<td class="valeur">${kN(t.V_max.valeur)} <span class="clause">x=${cote(t.V_max.x)}</span></td>` +
-        `<td class="valeur">${nombreFr(t.w_max.valeur, 2)} <span class="clause">x=${cote(t.w_max.x)}</span></td></tr>`
+        `<td class="valeur">${nombreAffiche(t.w_max.valeur, 2)} <span class="clause">x=${cote(t.w_max.x)}</span></td></tr>`
     )
     .join('');
   return (
@@ -115,7 +115,7 @@ export function blocsResultats(r: ResultatPoutre): BlocResultat[] {
         { symbole: 'M_max', libelle: `moment maximal, x = ${cote(r.extremes.M_max.x)} m`, valeur: `${kN(r.extremes.M_max.valeur)} kN.m` },
         { symbole: 'M_min', libelle: `moment minimal, x = ${cote(r.extremes.M_min.x)} m`, valeur: `${kN(r.extremes.M_min.valeur)} kN.m` },
         { symbole: 'V_max', libelle: `effort tranchant extreme, x = ${cote(r.extremes.V_max.x)} m`, valeur: `${kN(r.extremes.V_max.valeur)} kN` },
-        { symbole: 'w_max', libelle: `fleche extreme, x = ${cote(r.extremes.w_max.x)} m`, valeur: `${nombreFr(r.extremes.w_max.valeur, 2)} mm` },
+        { symbole: 'w_max', libelle: `fleche extreme, x = ${cote(r.extremes.w_max.x)} m`, valeur: `${nombreAffiche(r.extremes.w_max.valeur, 2)} mm` },
       ],
       note: null,
     },
@@ -127,8 +127,8 @@ export function blocsResultats(r: ResultatPoutre): BlocResultat[] {
       lignes.push(
         { symbole: 'M', libelle: 'moment flechissant sur appui', valeur: `${momentSurAppui(re)} kN.m` },
         { symbole: 'V_g / V_d', libelle: 'effort tranchant a gauche / a droite', valeur: `${ou(re.V_gauche)} / ${ou(re.V_droite)} kN` },
-        { symbole: 'w', libelle: 'deplacement vertical, positif vers le bas', valeur: `${nombreFr(re.w, 2)} mm` },
-        { symbole: 'theta', libelle: 'rotation, sens trigonometrique', valeur: `${nombreFr(re.rotation, 3)} mrad` }
+        { symbole: 'w', libelle: 'deplacement vertical, positif vers le bas', valeur: `${nombreAffiche(re.w, 2)} mm` },
+        { symbole: 'theta', libelle: 'rotation, sens trigonometrique', valeur: `${nombreAffiche(re.rotation, 3)} mrad` }
       );
       return { titre: `Appui A${i + 1} — ${LIBELLES_APPUI[a.type]}`, lignes, note: null };
     }),
@@ -138,7 +138,7 @@ export function blocsResultats(r: ResultatPoutre): BlocResultat[] {
         { symbole: 'M_max', libelle: `moment maximal, x = ${cote(t.M_max.x)} m`, valeur: `${kN(t.M_max.valeur)} kN.m` },
         { symbole: 'M_min', libelle: `moment minimal, x = ${cote(t.M_min.x)} m`, valeur: `${kN(t.M_min.valeur)} kN.m` },
         { symbole: 'V', libelle: `effort tranchant extreme, x = ${cote(t.V_max.x)} m`, valeur: `${kN(t.V_max.valeur)} kN` },
-        { symbole: 'w', libelle: `fleche extreme, x = ${cote(t.w_max.x)} m`, valeur: `${nombreFr(t.w_max.valeur, 2)} mm` },
+        { symbole: 'w', libelle: `fleche extreme, x = ${cote(t.w_max.x)} m`, valeur: `${nombreAffiche(t.w_max.valeur, 2)} mm` },
       ],
       note: null,
     })),
@@ -149,7 +149,7 @@ export function blocsResultats(r: ResultatPoutre): BlocResultat[] {
 export function valeursLeLongDeLaPoutre(r: ResultatPoutre): string[][] {
   const lignes = [['x (m)', 'V (kN)', 'M (kN.m)', 'w (mm)'].map(notationTexte)];
   for (const c of r.courbes) {
-    for (const p of c) lignes.push([nombreFr(p.x, 4), nombreFr(p.V, 3), nombreFr(p.M, 3), nombreFr(p.w, 4)]);
+    for (const p of c) lignes.push([nombreAffiche(p.x, 4), nombreAffiche(p.V, 3), nombreAffiche(p.M, 3), nombreAffiche(p.w, 4)]);
   }
   return lignes;
 }
@@ -161,7 +161,7 @@ function dispo(env: Enveloppe, zones: Zone[], d: Determinant): string {
 }
 
 function cellule(d: Determinant, env: Enveloppe, zones: Zone[], dec = 2): string {
-  return `<td class="valeur">${nombreFr(d.valeur, dec)} <span class="clause">x=${cote(d.x)}</span><br />${dispo(env, zones, d)}</td>`;
+  return `<td class="valeur">${nombreAffiche(d.valeur, dec)} <span class="clause">x=${cote(d.x)}</span><br />${dispo(env, zones, d)}</td>`;
 }
 
 export function tableauEnveloppeTravees(env: Enveloppe, zones: Zone[]): string {
@@ -211,7 +211,7 @@ export function avertissementsEnveloppe(env: Enveloppe): string[] {
   return env.appuis
     .map((a, i) =>
       a.R_min.valeur < -1e-6
-        ? `Appui A${i + 1} : reaction minimale ${nombreFr(a.R_min.valeur, 2)} kN, soulevement possible (${env.combinaison.nom}) ; l outil suppose l appui bilateral.`
+        ? `Appui A${i + 1} : reaction minimale ${nombreAffiche(a.R_min.valeur, 2)} kN, soulevement possible (${env.combinaison.nom}) ; l outil suppose l appui bilateral.`
         : null
     )
     .filter((t): t is string => t !== null);
@@ -221,7 +221,7 @@ export function blocsEnveloppe(env: Enveloppe, zones: Zone[]): BlocResultat[] {
   const l = (s: string, lib: string, d: Determinant, u: string): { symbole: string; libelle: string; valeur: string } => ({
     symbole: s,
     libelle: `${lib}, x = ${cote(d.x)} m ; ${libelleDisposition(env, zones, d)}`,
-    valeur: `${nombreFr(d.valeur, 2)} ${u}`,
+    valeur: `${nombreAffiche(d.valeur, 2)} ${u}`,
   });
   return [
     ...env.travees.map((t) => ({
@@ -248,17 +248,17 @@ export function blocsEnveloppe(env: Enveloppe, zones: Zone[]): BlocResultat[] {
 
 // --- Beton arme ------------------------------------------------------------------------
 
-const mm2 = (v: number | null): string => (v === null ? '—' : nombreFr(v, 0));
+const mm2 = (v: number | null): string => (v === null ? '—' : nombreAffiche(v, 0));
 
 function ligneFlexion(nom: string, f: Flexion | null, lit: string): string {
   if (f === null) return `<tr><td>${notationHtml(nom)}</td><td class="valeur" colspan="8">pas de moment de ce signe</td></tr>`;
-  const taux = f.M_Rd === null ? '—' : tauxFr(f.M_Ed / f.M_Rd);
+  const taux = f.M_Rd === null ? '—' : tauxAffiche(f.M_Ed / f.M_Rd);
   const classe = f.M_Rd === null ? '' : f.M_Ed <= f.M_Rd ? ' ok' : ' refus';
   const As = f.As2_req > 0 ? `${mm2(f.As_req)} + ${mm2(f.As2_req)} comp.` : mm2(f.As_req);
   return (
-    `<tr><td>${notationHtml(nom)}</td><td class="valeur">${nombreFr(f.M_Ed, 2)}</td><td class="valeur">${As}</td>` +
-    `<td class="valeur">${mm2(f.As_min)}</td><td class="valeur">${nombreFr(f.xu_d_req, 3)} &le; ${nombreFr(f.xu_d_limite, 3)}</td>` +
-    `<td>${notationHtml(lit)}</td><td class="valeur">${mm2(f.As_prov)}</td><td class="valeur">${f.M_Rd === null ? '—' : nombreFr(f.M_Rd, 2)}</td>` +
+    `<tr><td>${notationHtml(nom)}</td><td class="valeur">${nombreAffiche(f.M_Ed, 2)}</td><td class="valeur">${As}</td>` +
+    `<td class="valeur">${mm2(f.As_min)}</td><td class="valeur">${nombreAffiche(f.xu_d_req, 3)} &le; ${nombreAffiche(f.xu_d_limite, 3)}</td>` +
+    `<td>${notationHtml(lit)}</td><td class="valeur">${mm2(f.As_prov)}</td><td class="valeur">${f.M_Rd === null ? '—' : nombreAffiche(f.M_Rd, 2)}</td>` +
     `<td class="valeur${classe}">${taux}</td></tr>`
   );
 }
@@ -270,7 +270,7 @@ export function tableauBAFlexion(ba: ResultatBA, aciers: AciersChoisis): string 
   const appuis = ba.appuis
     .map((a, i) =>
       ligneFlexion(
-        `appui A${i + 1}${a.delta === 1 ? '' : `, δ = ${nombreFr(a.delta, 2)}`}`,
+        `appui A${i + 1}${a.delta === 1 ? '' : `, δ = ${nombreAffiche(a.delta, 2)}`}`,
         a.flexion,
         `${libelleLit(aciers.montage)} + ${libelleLit(aciers.appuis[i].chapeaux)}`
       )
@@ -282,7 +282,7 @@ export function tableauBAFlexion(ba: ResultatBA, aciers: AciersChoisis): string 
   return (
     `<h3>Flexion, aciers inferieurs (moment positif)</h3><div class="defilement"><table class="tableau">${tete}<tbody>${zones}</tbody></table></div>` +
     `<h3>Flexion, aciers superieurs sur appui (moment negatif)</h3><div class="defilement"><table class="tableau">${tete}<tbody>${appuis}</tbody></table></div>` +
-    `<p class="note">d<sub>inf</sub> = ${nombreFr(ba.d_inf, 0)} mm, d<sub>sup</sub> = ${nombreFr(ba.d_sup, 0)} mm. Au-dela de la limite de x<sub>u</sub>/d, aciers comprimes ajoutes (limite du §5.5(4), &delta; = 1 hors redistribution). M<sub>Rd</sub> : aciers tendus seuls, diagramme parabole-rectangle (section-uls).</p>`
+    `<p class="note">d<sub>inf</sub> = ${nombreAffiche(ba.d_inf, 0)} mm, d<sub>sup</sub> = ${nombreAffiche(ba.d_sup, 0)} mm. Au-dela de la limite de x<sub>u</sub>/d, aciers comprimes ajoutes (limite du §5.5(4), &delta; = 1 hors redistribution). M<sub>Rd</sub> : aciers tendus seuls, diagramme parabole-rectangle (section-uls).</p>`
   );
 }
 
@@ -293,7 +293,7 @@ export function tableauBAArrets(ba: ResultatBA): string {
     lignes.push(
       `<tr><td>${notationHtml(z.zone.nom)} &middot; renforts bas</td>` +
         (r === null
-          ? `<td colspan="4">non necessaires : les filants couvrent l'epure (M<sub>Rd</sub> = ${nombreFr(z.M_Rd_filants, 2)} kN·m)</td>`
+          ? `<td colspan="4">non necessaires : les filants couvrent l'epure (M<sub>Rd</sub> = ${nombreAffiche(z.M_Rd_filants, 2)} kN·m)</td>`
           : `<td class="valeur">${cote(r.necessaire[0])} – ${cote(r.necessaire[1])}</td><td class="valeur">${cote(r.de)}</td><td class="valeur">${cote(r.a)}</td><td class="valeur">${cote(r.a - r.de)}</td>`) +
         `</tr>`
     );
@@ -309,7 +309,7 @@ export function tableauBAArrets(ba: ResultatBA): string {
   return (
     `<h3>Arret des barres</h3><div class="defilement"><table class="tableau"><thead><tr><th>barres</th><th>necessaires de – a (m)</th>` +
     `<th>debut (m)</th><th>fin (m)</th><th>longueur (m)</th></tr></thead><tbody>${lignes.join('')}</tbody></table></div>` +
-    `<p class="note">Courbe enveloppe decalee de a<sub>l</sub> = ${nombreFr(ba.a_l, 3)} m (§9.2.1.3(2)) ; barres prolongees de l<sub>bd</sub> = ${nombreFr(ba.l_bd_inf, 0)} mm en bas et ${nombreFr(ba.l_bd_sup, 0)} mm en haut au-dela du point ou elles ne sont plus necessaires (§9.2.1.3(3) ; &alpha; = 1, &sigma;<sub>sd</sub> = f<sub>yd</sub>, adherence selon la position de coulage, §8.4).</p>`
+    `<p class="note">Courbe enveloppe decalee de a<sub>l</sub> = ${nombreAffiche(ba.a_l, 3)} m (§9.2.1.3(2)) ; barres prolongees de l<sub>bd</sub> = ${nombreAffiche(ba.l_bd_inf, 0)} mm en bas et ${nombreAffiche(ba.l_bd_sup, 0)} mm en haut au-dela du point ou elles ne sont plus necessaires (§9.2.1.3(3) ; &alpha; = 1, &sigma;<sub>sd</sub> = f<sub>yd</sub>, adherence selon la position de coulage, §8.4).</p>`
   );
 }
 
@@ -320,10 +320,10 @@ export function tableauBATranchant(ba: ResultatBA): string {
         const taux = t.V_Ed_reduit / t.V_Rd_s;
         const okBielles = t.V_Ed <= t.V_Rd_max;
         return (
-          `<tr><td>${notationHtml(z.zone.nom)}</td><td class="valeur">${cote(t.x)}</td><td class="valeur">${nombreFr(t.V_Ed, 1)}</td><td class="valeur">${nombreFr(t.V_Ed_reduit, 1)}</td>` +
-          `<td class="valeur">${nombreFr(t.V_Rd_c, 1)}</td><td class="valeur${okBielles ? '' : ' refus'}">${nombreFr(t.V_Rd_max, 1)}</td>` +
-          `<td class="valeur">${nombreFr(t.Asw_s_req, 3)}</td><td class="valeur">${nombreFr(t.Asw_s_prov, 3)}</td>` +
-          `<td class="valeur">${nombreFr(t.V_Rd_s, 1)}</td><td class="valeur${taux <= 1 ? ' ok' : ' refus'}">${tauxFr(taux)}</td><td class="valeur">${nombreFr(t.s_max, 0)}</td></tr>`
+          `<tr><td>${notationHtml(z.zone.nom)}</td><td class="valeur">${cote(t.x)}</td><td class="valeur">${nombreAffiche(t.V_Ed, 1)}</td><td class="valeur">${nombreAffiche(t.V_Ed_reduit, 1)}</td>` +
+          `<td class="valeur">${nombreAffiche(t.V_Rd_c, 1)}</td><td class="valeur${okBielles ? '' : ' refus'}">${nombreAffiche(t.V_Rd_max, 1)}</td>` +
+          `<td class="valeur">${nombreAffiche(t.Asw_s_req, 3)}</td><td class="valeur">${nombreAffiche(t.Asw_s_prov, 3)}</td>` +
+          `<td class="valeur">${nombreAffiche(t.V_Rd_s, 1)}</td><td class="valeur${taux <= 1 ? ' ok' : ' refus'}">${tauxAffiche(taux)}</td><td class="valeur">${nombreAffiche(t.s_max, 0)}</td></tr>`
         );
       })
     )
@@ -342,15 +342,15 @@ export function tableauBAExtremites(ba: ResultatBA): string {
     if (a.ancrage !== null) {
       const ok = a.ancrage.As_prov >= a.ancrage.As_req;
       lignes.push(
-        `<tr><td>A${i + 1}</td><td>ancrage des aciers inferieurs, F<sub>E</sub> = ${nombreFr(a.ancrage.F_E, 1)} kN (§9.2.1.4(2))</td>` +
+        `<tr><td>A${i + 1}</td><td>ancrage des aciers inferieurs, F<sub>E</sub> = ${nombreAffiche(a.ancrage.F_E, 1)} kN (§9.2.1.4(2))</td>` +
           `<td class="valeur">${mm2(a.ancrage.As_req)} mm²</td><td class="valeur${ok ? ' ok' : ' refus'}">${mm2(a.ancrage.As_prov)} mm²</td>` +
-          `<td class="valeur">${Number.isFinite(a.ancrage.l_requise) ? `l<sub>bd</sub> ${nombreFr(a.ancrage.l_requise, 0)} mm au-dela du parement` : '—'}</td></tr>`
+          `<td class="valeur">${Number.isFinite(a.ancrage.l_requise) ? `l<sub>bd</sub> ${nombreAffiche(a.ancrage.l_requise, 0)} mm au-dela du parement` : '—'}</td></tr>`
       );
     }
     if (a.monolithique !== null) {
       const ok = a.monolithique.As_prov >= a.monolithique.As_req;
       lignes.push(
-        `<tr><td>A${i + 1}</td><td>aciers superieurs pour &beta;<sub>1</sub> M<sub>travee</sub> = ${nombreFr(a.monolithique.M, 1)} kN·m (§9.2.1.2(1))</td>` +
+        `<tr><td>A${i + 1}</td><td>aciers superieurs pour &beta;<sub>1</sub> M<sub>travee</sub> = ${nombreAffiche(a.monolithique.M, 1)} kN·m (§9.2.1.2(1))</td>` +
           `<td class="valeur">${mm2(a.monolithique.As_req)} mm²</td><td class="valeur${ok ? ' ok' : ' refus'}">${mm2(a.monolithique.As_prov)} mm²</td><td></td></tr>`
       );
     }
@@ -359,7 +359,7 @@ export function tableauBAExtremites(ba: ResultatBA): string {
     if (!z.zone.nom.startsWith('travee') || z.part_filants === null) continue;
     lignes.push(
       `<tr><td>${notationHtml(z.zone.nom)}</td><td>aciers inferieurs prolonges sur appuis (§9.2.1.4(1), §9.2.1.5(1))</td>` +
-        `<td class="valeur">25 %</td><td class="valeur${z.part_filants >= 0.25 ? ' ok' : ' refus'}">${nombreFr(z.part_filants * 100, 0)} %</td><td></td></tr>`
+        `<td class="valeur">25 %</td><td class="valeur${z.part_filants >= 0.25 ? ' ok' : ' refus'}">${nombreAffiche(z.part_filants * 100, 0)} %</td><td></td></tr>`
     );
   }
   if (lignes.length === 0) return '';
@@ -376,14 +376,14 @@ export function blocsBA(ba: ResultatBA, aciers: AciersChoisis): BlocResultat[] {
       f === null
         ? []
         : [
-            { symbole: 'M_Ed', libelle: 'moment de calcul', valeur: `${nombreFr(f.M_Ed, 2)} kN.m` },
+            { symbole: 'M_Ed', libelle: 'moment de calcul', valeur: `${nombreAffiche(f.M_Ed, 2)} kN.m` },
             { symbole: 'A_s,req', libelle: 'aciers tendus necessaires', valeur: `${mm2(f.As_req)} mm2` },
             { symbole: 'A_s2,req', libelle: 'aciers comprimes necessaires', valeur: `${mm2(f.As2_req)} mm2` },
             { symbole: 'A_s,min', libelle: 'minimum §9.2.1.1', valeur: `${mm2(f.As_min)} mm2` },
-            { symbole: 'x_u/d', libelle: `axe neutre, limite ${nombreFr(f.xu_d_limite, 3)}`, valeur: nombreFr(f.xu_d_req, 3) },
+            { symbole: 'x_u/d', libelle: `axe neutre, limite ${nombreAffiche(f.xu_d_limite, 3)}`, valeur: nombreAffiche(f.xu_d_req, 3) },
             { symbole: 'aciers', libelle: 'aciers choisis', valeur: lit },
-            { symbole: 'M_Rd', libelle: 'moment resistant des aciers choisis', valeur: f.M_Rd === null ? '—' : `${nombreFr(f.M_Rd, 2)} kN.m` },
-            { symbole: 'taux', libelle: 'M_Ed / M_Rd', valeur: f.M_Rd === null ? '—' : tauxFr(f.M_Ed / f.M_Rd) },
+            { symbole: 'M_Rd', libelle: 'moment resistant des aciers choisis', valeur: f.M_Rd === null ? '—' : `${nombreAffiche(f.M_Rd, 2)} kN.m` },
+            { symbole: 'taux', libelle: 'M_Ed / M_Rd', valeur: f.M_Rd === null ? '—' : tauxAffiche(f.M_Ed / f.M_Rd) },
           ],
     note: f === null ? 'Pas de moment de ce signe.' : null,
   });
@@ -406,15 +406,15 @@ export function blocsBA(ba: ResultatBA, aciers: AciersChoisis): BlocResultat[] {
           a.chapeaux === null ? [] : [{ symbole: `A${a.indice + 1}`, libelle: 'chapeaux', valeur: `de ${cote(a.chapeaux.de)} a ${cote(a.chapeaux.a)} m` }]
         ),
       ],
-      note: `a_l = ${nombreFr(ba.a_l, 3)} m ; l_bd = ${nombreFr(ba.l_bd_inf, 0)} mm (bas), ${nombreFr(ba.l_bd_sup, 0)} mm (haut).`,
+      note: `a_l = ${nombreAffiche(ba.a_l, 3)} m ; l_bd = ${nombreAffiche(ba.l_bd_inf, 0)} mm (bas), ${nombreAffiche(ba.l_bd_sup, 0)} mm (haut).`,
     },
     {
       titre: 'Beton arme — effort tranchant',
       lignes: ba.zones.flatMap((z) =>
         z.tranchant.map((t) => ({
           symbole: `${z.zone.nom}, x = ${cote(t.x)}`,
-          libelle: `V_Ed ${nombreFr(t.V_Ed, 1)} kN (axe), ${nombreFr(t.V_Ed_reduit, 1)} kN a d du parement ; V_Rd,max ${nombreFr(t.V_Rd_max, 1)} kN ; V_Rd,s ${nombreFr(t.V_Rd_s, 1)} kN`,
-          valeur: `A_sw/s req ${nombreFr(t.Asw_s_req, 3)} mm2/mm`,
+          libelle: `V_Ed ${nombreAffiche(t.V_Ed, 1)} kN (axe), ${nombreAffiche(t.V_Ed_reduit, 1)} kN a d du parement ; V_Rd,max ${nombreAffiche(t.V_Rd_max, 1)} kN ; V_Rd,s ${nombreAffiche(t.V_Rd_s, 1)} kN`,
+          valeur: `A_sw/s req ${nombreAffiche(t.Asw_s_req, 3)} mm2/mm`,
         }))
       ),
       note: null,
@@ -428,7 +428,7 @@ const VERDICTS_ACIER = { conforme: 'Conforme', 'non-conforme': 'Non conforme', i
 
 function celluleTaux(t: number | null): string {
   if (t === null) return '<td class="valeur">—</td>';
-  return `<td class="valeur${t <= 1 ? ' ok' : ' refus'}">${tauxFr(t)}</td>`;
+  return `<td class="valeur${t <= 1 ? ' ok' : ' refus'}">${tauxAffiche(t)}</td>`;
 }
 
 /**
@@ -440,13 +440,13 @@ export function tableauAcier(r: ResultatAcier): string {
   const lignes = r.zones
     .map(
       (z) =>
-        `<tr><td>${notationHtml(z.zone.nom)}</td><td class="valeur">${nombreFr(z.M_Ed, 1)}</td><td class="valeur">${nombreFr(z.V_Ed, 1)}</td>` +
+        `<tr><td>${notationHtml(z.zone.nom)}</td><td class="valeur">${nombreAffiche(z.M_Ed, 1)}</td><td class="valeur">${nombreAffiche(z.V_Ed, 1)}</td>` +
         `<td class="valeur">${z.element === null ? '—' : z.element.classification.classe}</td>` +
         celluleTaux(z.tauxSection) +
         celluleTaux(z.tauxCisaillement) +
-        `<td class="valeur">${nombreFr(z.L_LT, 2)}</td>` +
+        `<td class="valeur">${nombreAffiche(z.L_LT, 2)}</td>` +
         celluleTaux(z.tauxDeversement) +
-        `<td class="valeur">${nombreFr(z.w, 1)} / ${nombreFr(z.w_lim, 1)}</td>` +
+        `<td class="valeur">${nombreAffiche(z.w, 1)} / ${nombreAffiche(z.w_lim, 1)}</td>` +
         celluleTaux(z.tauxFleche) +
         '</tr>' +
         (z.erreur === null ? '' : `<tr><td></td><td colspan="9" class="refus">${notationHtml(z.erreur)}</td></tr>`)
@@ -454,8 +454,8 @@ export function tableauAcier(r: ResultatAcier): string {
     .join('');
   return (
     `<p class="verdict verdict-${r.verdict}">${VERDICTS_ACIER[r.verdict]}</p>` +
-    `<p class="note">${notationHtml(c.nom)} : A = ${nombreFr(c.A / 100, 1)} cm², I<sub>y</sub> = ${nombreFr(c.Iy / 1e4, 0)} cm⁴, ` +
-    `poids propre ${nombreFr(c.poids, 3)} kN/m, EI = ${nombreFr(c.EI, 0)} kN·m².</p>` +
+    `<p class="note">${notationHtml(c.nom)} : A = ${nombreAffiche(c.A / 100, 1)} cm², I<sub>y</sub> = ${nombreAffiche(c.Iy / 1e4, 0)} cm⁴, ` +
+    `poids propre ${nombreAffiche(c.poids, 3)} kN/m, EI = ${nombreAffiche(c.EI, 0)} kN·m².</p>` +
     '<div class="defilement"><table class="tableau"><thead><tr><th>zone</th><th>M<sub>Ed</sub> (kN.m)</th><th>V<sub>Ed</sub> (kN)</th><th>classe</th>' +
     '<th>M<sub>Ed</sub> / M<sub>y,V,Rd</sub></th><th>V<sub>Ed</sub> / V<sub>pl,Rd</sub></th><th>L<sub>LT</sub> (m)</th><th>M<sub>Ed</sub> / M<sub>b,Rd</sub></th>' +
     `<th>w / w<sub>lim</sub> (mm)</th><th>fleche</th></tr></thead><tbody>${lignes}</tbody></table></div>` +
@@ -466,19 +466,19 @@ export function tableauAcier(r: ResultatAcier): string {
 
 /** Blocs du CSV et de la note : une ligne par grandeur et par zone. */
 export function blocsAcier(r: ResultatAcier): BlocResultat[] {
-  const t = (x: number | null) => (x === null ? '—' : tauxFr(x));
+  const t = (x: number | null) => (x === null ? '—' : tauxAffiche(x));
   return [
     ...r.zones.map((z) => ({
       titre: `Acier — ${z.zone.nom}`,
       lignes: [
-        { symbole: 'M_Ed', libelle: 'moment maximal en valeur absolue, ELU', valeur: `${nombreFr(z.M_Ed, 2)} kN.m` },
-        { symbole: 'V_Ed', libelle: 'effort tranchant maximal, ELU', valeur: `${nombreFr(z.V_Ed, 2)} kN` },
+        { symbole: 'M_Ed', libelle: 'moment maximal en valeur absolue, ELU', valeur: `${nombreAffiche(z.M_Ed, 2)} kN.m` },
+        { symbole: 'V_Ed', libelle: 'effort tranchant maximal, ELU', valeur: `${nombreAffiche(z.V_Ed, 2)} kN` },
         { symbole: 'classe', libelle: 'classe de section', valeur: z.element === null ? '—' : String(z.element.classification.classe) },
         { symbole: 'M_Ed / M_y,V,Rd', libelle: 'section, §6.2.5 et §6.2.8', valeur: t(z.tauxSection) },
         { symbole: 'V_Ed / V_pl,Rd', libelle: 'cisaillement, §6.2.6', valeur: t(z.tauxCisaillement) },
-        { symbole: 'L_LT', libelle: 'longueur entre maintiens', valeur: `${nombreFr(z.L_LT, 2)} m` },
+        { symbole: 'L_LT', libelle: 'longueur entre maintiens', valeur: `${nombreAffiche(z.L_LT, 2)} m` },
         { symbole: 'M_Ed / M_b,Rd', libelle: 'deversement, §6.3.2', valeur: t(z.tauxDeversement) },
-        { symbole: 'w / w_lim', libelle: 'fleche caracteristique', valeur: `${nombreFr(z.w, 1)} / ${nombreFr(z.w_lim, 1)} mm` },
+        { symbole: 'w / w_lim', libelle: 'fleche caracteristique', valeur: `${nombreAffiche(z.w, 1)} / ${nombreAffiche(z.w_lim, 1)} mm` },
         { symbole: 'taux fleche', libelle: 'w / w_lim', valeur: t(z.tauxFleche) },
       ],
       note: z.erreur,

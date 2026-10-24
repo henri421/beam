@@ -8,7 +8,7 @@
  * et un bandeau signale qu'ils ne correspondent plus a la saisie.
  */
 
-import { blocsEnTexte, csv, notationHtml, notationTexte, nombreFr, ouvrirOuTelecharger, resultatsEnCsv, svgAutonome, telecharger } from 'aedificium-ui';
+import { blocsEnTexte, csv, notationHtml, notationTexte, nombreAffiche, ouvrirOuTelecharger, resultatsEnCsv, svgAutonome, telecharger } from 'aedificium-ui';
 import {
   libelleDisposition,
   resultatDeDisposition,
@@ -226,7 +226,7 @@ function rafraichirSchema(): void {
     montrer(zones.erreurSaisie, lecture.message);
     return;
   }
-  zones.rigidite.textContent = `EI = ${nombreFr(lecture.poutre.EI, 0)} kN·m²`;
+  zones.rigidite.textContent = `EI = ${nombreAffiche(lecture.poutre.EI, 0)} kN·m²`;
   try {
     verifierDonnees(lecture.poutre);
   } catch (e) {
@@ -238,7 +238,7 @@ function rafraichirSchema(): void {
   if (modele.ba.actif || modele.acier.actif) rendreFerraillage(lecture.poutre);
   if (modele.acier.actif) {
     try {
-      zones.rigidite.textContent = `EI = ${nombreFr(caracteristiquesProfil(modele.acier.profil).EI, 0)} kN·m² (profil ${modele.acier.profil})`;
+      zones.rigidite.textContent = `EI = ${nombreAffiche(caracteristiquesProfil(modele.acier.profil).EI, 0)} kN·m² (profil ${modele.acier.profil})`;
     } catch {
       // Profil inconnu : le calcul le dira.
     }
