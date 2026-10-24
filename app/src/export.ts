@@ -62,11 +62,10 @@ export interface NoteDeCalcul {
   hypotheses: string[];
 }
 
-const AIDE_AU_CALCUL =
-  "Outil d'aide au calcul. Cet outil constate, il ne prescrit pas. Le calcul est elastique " +
-  "lineaire, sur les charges telles que saisies : combinaisons, coefficients partiels, " +
-  "redistribution et verifications de section restent a la charge de l'ingenieur. " +
-  "Cette note est un compte rendu, pas une justification reglementaire signee.";
+const PIED_DE_NOTE =
+  "Note produite par l'outil poutres-continues : calcul élastique linéaire au premier ordre, " +
+  "enveloppes des combinaisons EN 1990, vérifications de section selon l'EN 1992-1-1 ou " +
+  "l'EN 1993-1-1, valeurs recommandées. Les données d'entrée sont celles du modèle enregistré.";
 
 const STYLE_NOTE = `
   body { margin: 0; padding: 24px 28px; background: var(--surface); color: var(--texte); font: 14px/1.5 var(--sans); }
@@ -125,6 +124,6 @@ ${avertissements}
 <h2>Schéma et diagrammes</h2>${dessins}
 <h2>Résultats</h2>${note.resultats.map(tableDuBloc).join('')}
 ${hypotheses}
-<p class="pied">${AIDE_AU_CALCUL}</p>
+<p class="pied">${PIED_DE_NOTE}</p>
 </body></html>`;
 }
