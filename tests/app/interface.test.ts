@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { JETONS, nombreAffiche, valeursDesJetons } from 'aedificium-ui';
+import { JETONS, nombreAffiche, noteDeCalculHtml, valeursDesJetons } from 'aedificium-ui';
 import { calculerBetonArme, calculerCombinaisons, calculerPoutre, profilRecommande } from '../../src/index';
 import {
   EXEMPLES,
@@ -16,7 +16,7 @@ import {
 } from '../../app/src/form';
 import { dessinDiagramme, dessinSchema } from '../../app/src/dessin';
 import { blocsResultats, tableauReactions, valeursLeLongDeLaPoutre } from '../../app/src/vue';
-import { STYLES_TRACE, noteDeCalculHtml } from '../../app/src/export';
+import { STYLES_TRACE } from '../../app/src/export';
 
 describe('saisie', () => {
   it('le modele par defaut se lit : 16 m, EI = 31 000 MPa x 540 000 cm4 = 167 400 kN.m2', () => {
@@ -139,11 +139,15 @@ describe('traces et sorties', () => {
 
   it('la note porte les dessins, echappe le texte et rappelle la doctrine', () => {
     const html = noteDeCalculHtml(
-      { titre: 'Poutre <test>', date: '2026-10-09', entrees: [], dessins: ['<svg></svg>'], resultats: blocsResultats(r), avertissements: [], hypotheses: ['h1'] },
+      {
+        cartouche: { projet: 'Projet', element: 'Poutre <test>', date: '2026-10-09', norme: 'EN 1990', outil: 'poutres-continues' },
+        sections: { geometrie: [{ type: 'figure', svg: '<svg></svg>', legende: 'Schéma' }], calculs: blocsResultats(r).map((bloc) => ({ type: 'bloc' as const, bloc })) },
+        verifications: [],
+      },
       STYLES_TRACE
     );
     expect(html).toContain('Poutre &lt;test&gt;');
-    expect(html).toContain('<div class="dessin"><svg></svg></div>');
+    expect(html).toContain('<svg></svg>');
     expect(html).not.toContain('constate, il ne prescrit pas');
   });
 });

@@ -7,7 +7,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { NOMS_GRECS, blocsEnTexte, constatsAffichage, contenuBalise, csv, notationHtml, resultatsEnCsv, texteVisible } from 'aedificium-ui';
+import { NOMS_GRECS, blocsEnTexte, constatsAffichage, contenuBalise, csv, notationHtml, noteDeCalculHtml, resultatsEnCsv, texteVisible } from 'aedificium-ui';
 import { EXEMPLES, acierParDefaut, ajusterFerraillage, lignesAppuis, lignesCharges, type ModeleSaisie } from '../../app/src/form';
 import {
   resume,
@@ -23,8 +23,8 @@ import {
   tableauTravees,
   valeursLeLongDeLaPoutre,
 } from '../../app/src/vue';
-import { STYLES_TRACE, noteDeCalculHtml } from '../../app/src/export';
-import { HYPOTHESES, avertissementsDuCalcul, blocsDEntree, blocsDeSortie, calculerTout, dessins } from '../../app/src/sorties';
+import { STYLES_TRACE } from '../../app/src/export';
+import { avertissementsDuCalcul, blocsDEntree, blocsDeSortie, calculerTout, dessins, noteDuCalcul } from '../../app/src/sorties';
 
 const TITRE = 'Poutres continues';
 const lire = (chemin: string): string => readFileSync(fileURLToPath(new URL(chemin, import.meta.url)), 'utf8');
@@ -60,18 +60,7 @@ function sorties() {
     const svgs = dessins(c);
     ecran.push(...svgs.map((d) => d.svg), ...svgs.map((d) => d.titre), ...avertissementsDuCalcul(c).map((a) => notationHtml(a)));
     notes.push(
-      noteDeCalculHtml(
-        {
-          titre: 'Poutre',
-          date: '2026-10-24',
-          entrees: blocsDEntree(c),
-          dessins: svgs.map((d) => d.svg),
-          resultats: blocsDeSortie(c),
-          avertissements: avertissementsDuCalcul(c),
-          hypotheses: HYPOTHESES,
-        },
-        STYLES_TRACE
-      )
+      noteDeCalculHtml(noteDuCalcul(c, { projet: 'Projet', element: 'Poutre', date: '2026-10-24' }, avertissementsDuCalcul(c)), STYLES_TRACE)
     );
     csvs.push(resultatsEnCsv(blocsEnTexte([...blocsDEntree(c), ...blocsDeSortie(c)])), csv(valeursLeLongDeLaPoutre(c.direct)));
   }
