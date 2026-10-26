@@ -135,6 +135,9 @@ export interface Tranchant {
   /** Cadres choisis : A_sw/s (mm2/mm), V_Rd,s (kN). */
   Asw_s_prov: number;
   V_Rd_s: number;
+  /** Bras de levier retenu, z = 0,9 d (mm), et f_ywd (MPa) : valeurs de (6.8). */
+  z: number;
+  f_ywd: number;
   s_max: number;
 }
 
@@ -613,6 +616,8 @@ export function calculerBetonArme(
         Asw_s_min,
         Asw_s_prov: Asw / d.cadres.s,
         V_Rd_s: avec.VRds,
+        z,
+        f_ywd: fywd,
         s_max: profil.s_l_max.valeur * dd,
       });
       if (Vax > avec.VRdmax) avertissements.push(`${zb.zone.nom}, x = ${nombreAffiche(x)} m : V_Ed = ${nombreAffiche(Vax, 1)} kN depasse V_Rd,max = ${nombreAffiche(avec.VRdmax, 1)} kN ; les bielles cèdent, agrandir la section.`);
