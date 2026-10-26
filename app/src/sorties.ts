@@ -5,7 +5,14 @@
  * Tout ici est PUR — aucun `document`. Le cablage vit dans `main.ts`.
  */
 
-import { lireNombre, nombreAffiche, type BlocResultat } from 'aedificium-ui';
+import {
+  lireNombre,
+  nombreAffiche,
+  type BlocResultat,
+  type ElementNote,
+  type NoteDeCalcul,
+  type VerificationNote,
+} from 'aedificium-ui';
 import {
   LIBELLES_APPUI,
   LIBELLES_CHARGE,
@@ -91,6 +98,7 @@ export const HYPOTHESES = [
   "Une seule action variable Q ; appuis bilatéraux, un soulèvement est signalé et rendu tel quel.",
   "Béton armé : flexion simple (section-uls, parabole-rectangle) ; x_u/d limite par le §5.5(4), delta = 1 hors redistribution ; effort tranchant §6.2 cadres droits, z = 0,9 d ; épure décalée de a_l (§9.2.1.3) ; l_bd avec alpha = 1 et sigma_sd = f_yd (dispositions-constructives).",
   "Signes : charges vers le bas positives ; M positif fibre inférieure tendue ; V = dM/dx ; flèche positive vers le bas ; moments appliqués et de réaction positifs dans le sens trigonométrique.",
+  "Les données d'entrée sont celles du modèle enregistré.",
   "Acier (si retenu) : EN 1993-1-1 par sections-ec3 ; par zone, M_Ed et V_Ed maximaux pris ensemble ; déversement avec C1 = 1 ou M_cr saisi ; flèche de l'enveloppe caractéristique comparée à L / n ; EI du profil, E = 210 000 MPa.",
 ];
 
@@ -202,4 +210,165 @@ export function dessins(c: Calcul): { nom: string; titre: string; svg: string }[
   ];
   if (c.ba !== null) liste.push({ nom: 'epure', titre: "Épure d'arrêt des barres", svg: dessinEpure(c.ba.resultat, L, c.ba.donnees.aciers) });
   return liste;
+}
+
+/**
+ * Note de calcul au format commun d'aedificium-ui : contenu range par sections
+ * et verifications listees par zone. Fonction pure, comme le reste du module.
+ */
+export function noteDuCalcul(
+  c: Calcul,
+  cartouche: { projet: string; element: string; date: string },
+  avertissements: string[] = []
+): NoteDeCalcul {
+  const blocs = blocsDEntree(c);
+  const bloc = (titre: string): BlocResultat => blocs.find((x) => x.titre === titre)!;
+  const enBloc = (b: BlocResultat): ElementNote => ({ type: 'bloc', bloc: b });
+  const figure = (nom: string): ElementNote => {
+    const d = dessins(c).find((x) => x.nom === nom)!;
+    return { type: 'figure', svg: d.svg, legende: d.titre };
+  };
+
+  // Geometrie : poutre sans les rigidites, appuis, schema statique.
+  const poutre = bloc('Poutre');
+  const geometrie: ElementNote[] = [
+    enBloc({ ...poutre, lignes: poutre.lignes.filter((l) => !['E', 'I', 'EI'].includes(l.symbole)) }),
+    enBloc(bloc('Appuis')),
+    figure('schema'),
+  ];
+
+  // Materiaux : rigidites seules, puis le bloc beton arme ou acier s'il existe.
+  const materiaux: ElementNote[] = [
+    enBloc({ titre: 'Rigidité', lignes: poutre.lignes.filter((l) => ['E', 'I', 'EI'].includes(l.symbole)), note: null }),
+  ];
+  const beton = blocs.find((x) => x.titre === 'Béton armé');
+  if (beton) {
+    geometrie.push(
+      enBloc({ titre: 'Section', lignes: beton.lignes.filter((l) => ['section', 'a_inf / a_sup'].includes(l.symbole)), note: null })
+    );
+    materiaux.push(
+      enBloc({
+        titre: 'Béton armé',
+        lignes: beton.lignes.filter((l) => !['section', 'a_inf / a_sup'].includes(l.symbole)),
+        note: null,
+      })
+    );
+  }
+  const acierEntree = blocs.find((x) => x.titre === 'Acier');
+  if (acierEntree) materiaux.push(enBloc(acierEntree));
+
+  // Hypotheses : liste commune, puis les lignes du profil normatif.
+  const combinaisons = bloc('Combinaisons');
+  const clesProfil = Object.keys(PROFIL);
+  const hypotheses: ElementNote[] = [
+    { type: 'liste', items: HYPOTHESES },
+    enBloc({
+      titre: 'Paramètres',
+      lignes: combinaisons.lignes.filter((l) => clesProfil.includes(l.symbole)),
+      note: combinaisons.note,
+    }),
+  ];
+
+  // Une etape (6.8) par jeu de valeurs distinct : des cadres identiques donnent
+  // la meme ligne partout, la repeter n'apprend rien. La clause dit ou elle vaut.
+  const etapes: ElementNote[] = [];
+  if (c.ba !== null) {
+    const parValeurs = new Map<string, { substituee: string; resultat: string; lieux: string[] }>();
+    let total = 0;
+    for (const zone of c.ba.resultat.zones) {
+      for (const t of zone.tranchant) {
+        const substituee = `${nombreAffiche(t.Asw_s_prov)} · ${nombreAffiche(t.z, 1)} · ${nombreAffiche(t.f_ywd, 1)} · ${nombreAffiche(c.ba.donnees.cotTheta)} / 1000`;
+        const resultat = `${nombreAffiche(t.V_Rd_s, 1)} kN`;
+        const cle = `${substituee}|${resultat}`;
+        const deja = parValeurs.get(cle) ?? { substituee, resultat, lieux: [] };
+        deja.lieux.push(`${zone.zone.nom}, x = ${cote(t.x)} m`);
+        parValeurs.set(cle, deja);
+        total++;
+      }
+    }
+    for (const v of parValeurs.values()) {
+      const ou = v.lieux.length === total ? 'toutes les extrémités de zone' : v.lieux.join(' ; ');
+      etapes.push({ type: 'etape', formule: 'V_Rd,s = A_sw / s · z · f_ywd · cot theta', substituee: v.substituee, resultat: v.resultat, clause: `§6.2.3 (6.8) — ${ou}` });
+    }
+  }
+
+  const calculs: ElementNote[] = [];
+  for (const b of blocsDeSortie(c)) {
+    calculs.push(enBloc(b));
+    if (b.titre === 'Béton armé — effort tranchant') calculs.push(...etapes);
+  }
+  for (const d of dessins(c)) if (d.nom !== 'schema') calculs.push(figure(d.nom));
+
+  // Verifications : beton arme puis acier, toujours avec un taux (NaN si incalculable).
+  const verifications: VerificationNote[] = [];
+  if (c.ba !== null) {
+    for (const zone of c.ba.resultat.zones) {
+      if (zone.flexion && zone.flexion.M_Rd !== null) {
+        const taux = zone.flexion.M_Ed / zone.flexion.M_Rd;
+        verifications.push({ nom: `Flexion, ${zone.zone.nom}`, taux, ok: Number.isFinite(taux) && taux <= 1, clause: '§6.1' });
+      }
+    }
+    for (const appui of c.ba.resultat.appuis) {
+      if (appui.flexion && appui.flexion.M_Rd !== null) {
+        const taux = appui.flexion.M_Ed / appui.flexion.M_Rd;
+        verifications.push({
+          nom: `Flexion, appui x = ${cote(appui.x)} m`,
+          taux,
+          ok: Number.isFinite(taux) && taux <= 1,
+          clause: '§6.1',
+        });
+      }
+    }
+    for (const zone of c.ba.resultat.zones) {
+      for (const t of zone.tranchant) {
+        const taux = t.V_Ed_reduit / Math.min(t.V_Rd_s, t.V_Rd_max);
+        verifications.push({
+          nom: `Effort tranchant, ${zone.zone.nom}, x = ${cote(t.x)} m`,
+          taux,
+          ok: Number.isFinite(taux) && taux <= 1,
+          clause: '§6.2.3',
+        });
+      }
+    }
+  }
+  if (c.acier !== null) {
+    for (const zone of c.acier.resultat.zones) {
+      const ajouter = (nom: string, taux: number | null, clause: string): void => {
+        verifications.push({
+          nom: `${nom}, ${zone.zone.nom}`,
+          taux: taux ?? NaN,
+          ok: taux !== null && taux <= 1,
+          clause,
+        });
+      };
+      ajouter('Section', zone.tauxSection, '§6.2');
+      ajouter('Cisaillement', zone.tauxCisaillement, '§6.2.6');
+      if (zone.tauxDeversement !== null) ajouter('Déversement', zone.tauxDeversement, '§6.3.2');
+      ajouter('Flèche', zone.tauxFleche, 'L / n');
+    }
+  }
+
+  const element =
+    cartouche.element.trim() || `Poutre de ${cote(c.poutre.longueur)} m, ${c.poutre.appuis.length} appuis`;
+  const norme =
+    c.acier !== null ? 'EN 1990:2002, EN 1993-1-1:2005' : c.ba !== null ? 'EN 1990:2002, EN 1992-1-1:2004' : 'EN 1990:2002';
+  return {
+    cartouche: { projet: cartouche.projet, element, date: cartouche.date, norme, outil: 'poutres-continues' },
+    sections: {
+      geometrie,
+      materiaux,
+      hypotheses,
+      charges: [enBloc(bloc('Charges'))],
+      combinaisons: [
+        enBloc({
+          ...combinaisons,
+          lignes: combinaisons.lignes.filter((l) => !clesProfil.includes(l.symbole)),
+          note: null,
+        }),
+      ],
+      calculs,
+    },
+    verifications,
+    avertissements,
+  };
 }

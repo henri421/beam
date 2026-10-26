@@ -491,7 +491,7 @@ export function calculerBetonArme(
       if (Ar === 0) avertissements.push(`${z.nom} : les filants ne couvrent pas l'épure décalée ; des renforts sont nécessaires.`);
     }
     const part = Af + Ar > 0 ? Af / (Af + Ar) : null;
-    if (z.nom.startsWith('travee') && part !== null && part < 0.25) {
+    if (z.nom.startsWith('travée') && part !== null && part < 0.25) {
       avertissements.push(`${z.nom} : ${Math.round(part * 100)} % seulement des aciers inférieurs prolongés sur appui, moins des 25 % du §9.2.1.4(1) et du §9.2.1.5(1).`);
     }
     return { zone: z, flexion: fl, M_Rd_filants: MRd_f, renforts, part_filants: part, tranchant: [] };

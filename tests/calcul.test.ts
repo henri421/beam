@@ -82,7 +82,7 @@ describe('poutres isostatiques', () => {
     // Mi-travee 5ql4/384EI - (qa2/2) l2/8EI = 3,375 - 1,8 = 1,575 mm.
     const r = calculerPoutre(poutre(10, [appuiSimple(2), appuiSimple(8)], [uniforme(0, 10, 10)]));
     expect(r.degreHyperstatique).toBe(0);
-    expect(r.travees.map((t) => t.nom)).toEqual(['console gauche', 'travee 1', 'console droite']);
+    expect(r.travees.map((t) => t.nom)).toEqual(['console gauche', 'travée 1', 'console droite']);
     expect(r.reactions[0].R).toBeCloseTo(50, 9);
     expect(r.reactions[1].R).toBeCloseTo(50, 9);
     expect(r.reactions[0].M_gauche).toBeCloseTo(-20, 9);
@@ -129,7 +129,7 @@ describe('poutres hyperstatiques', () => {
     expect(r.reactions[1].M_gauche).toBeCloseTo(-25, 9);
     expect(r.reactions[1].V_gauche).toBeCloseTo(-30, 9);
     expect(r.reactions[1].V_droite).toBeCloseTo(25, 9);
-    expect(r.travees.map((t) => t.nom)).toEqual(['travee 1', 'travee 2', 'travee 3']);
+    expect(r.travees.map((t) => t.nom)).toEqual(['travée 1', 'travée 2', 'travée 3']);
     expect(r.travees[0].M_max.valeur).toBeCloseTo(20, 9);
     expect(r.travees[0].M_max.x).toBeCloseTo(2, 9);
     expect(r.travees[1].M_max.valeur).toBeCloseTo(6.25, 9);

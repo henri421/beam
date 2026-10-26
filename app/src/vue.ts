@@ -356,7 +356,7 @@ export function tableauBAExtremites(ba: ResultatBA): string {
     }
   });
   for (const z of ba.zones) {
-    if (!z.zone.nom.startsWith('travee') || z.part_filants === null) continue;
+    if (!z.zone.nom.startsWith('travée') || z.part_filants === null) continue;
     lignes.push(
       `<tr><td>${notationHtml(z.zone.nom)}</td><td>aciers inférieurs prolongés sur appuis (§9.2.1.4(1), §9.2.1.5(1))</td>` +
         `<td class="valeur">25 %</td><td class="valeur${z.part_filants >= 0.25 ? ' ok' : ' refus'}">${nombreAffiche(z.part_filants * 100, 0)} %</td><td></td></tr>`

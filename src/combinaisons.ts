@@ -303,8 +303,8 @@ export function verifierRedistribution(p: Poutre, deltas: number[], profil: Prof
       throw new Error(`Appui ${n} : delta = ${nombreAffiche(delta)} est inférieur au minimum ${nombreAffiche(minimum)} des aciers de classe ${classeAcier} (§5.5(4)).`);
     }
     const x = p.appuis[i].x;
-    const g = zones.find((z) => Math.abs(z.x1 - x) < TOLERANCE_X && z.nom.startsWith('travee'));
-    const d = zones.find((z) => Math.abs(z.x0 - x) < TOLERANCE_X && z.nom.startsWith('travee'));
+    const g = zones.find((z) => Math.abs(z.x1 - x) < TOLERANCE_X && z.nom.startsWith('travée'));
+    const d = zones.find((z) => Math.abs(z.x0 - x) < TOLERANCE_X && z.nom.startsWith('travée'));
     if (g === undefined || d === undefined) {
       throw new Error(`Appui ${n} : la redistribution est réservée aux appuis intermédiaires entre deux travées.`);
     }

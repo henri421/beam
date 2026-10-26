@@ -497,7 +497,7 @@ export function decouperEnTravees(p: Poutre): [string, number, number][] {
   const xs = [...new Set(p.appuis.map((a) => a.x))].sort((a, b) => a - b);
   const zones: [string, number, number][] = [];
   if (xs[0] > TOLERANCE_X) zones.push(['console gauche', 0, xs[0]]);
-  for (let i = 0; i < xs.length - 1; i++) zones.push([`travee ${i + 1}`, xs[i], xs[i + 1]]);
+  for (let i = 0; i < xs.length - 1; i++) zones.push([`travée ${i + 1}`, xs[i], xs[i + 1]]);
   if (xs[xs.length - 1] < p.longueur - TOLERANCE_X) zones.push(['console droite', xs[xs.length - 1], p.longueur]);
   return zones;
 }

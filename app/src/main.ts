@@ -8,7 +8,7 @@
  * et un bandeau signale qu'ils ne correspondent plus a la saisie.
  */
 
-import { blocsEnTexte, csv, notationHtml, notationTexte, nombreAffiche, ouvrirOuTelecharger, resultatsEnCsv, svgAutonome, telecharger } from 'aedificium-ui';
+import { blocsEnTexte, csv, notationHtml, notationTexte, nombreAffiche, noteDeCalculHtml, ouvrirOuTelecharger, resultatsEnCsv, svgAutonome, telecharger } from 'aedificium-ui';
 import {
   libelleDisposition,
   resultatDeDisposition,
@@ -41,7 +41,7 @@ import {
   lignesAcier,
   profilsEnI,
 } from './form';
-import { cote, dessinDiagramme, dessinEnveloppe, dessinEpure, dessinSchema } from './dessin';
+import { dessinDiagramme, dessinEnveloppe, dessinEpure, dessinSchema } from './dessin';
 import {
   avertissementsEnveloppe,
   messageDErreur,
@@ -58,14 +58,14 @@ import {
   tableauAcier,
   valeursLeLongDeLaPoutre,
 } from './vue';
-import { STYLES_TRACE, noteDeCalculHtml } from './export';
+import { STYLES_TRACE } from './export';
 import {
-  HYPOTHESES,
   avertissementsDuCalcul,
   blocsDEntree,
   blocsDeSortie,
   calculerTout,
   dessins,
+  noteDuCalcul,
   type Calcul,
 } from './sorties';
 import './style.css';
@@ -82,6 +82,8 @@ const selecteurExemple = exige<HTMLSelectElement>('[data-role="exemple"]');
 const selecteurVue = exige<HTMLSelectElement>('[data-role="vue"]');
 const selecteurDisposition = exige<HTMLSelectElement>('[data-role="disposition"]');
 const selecteurDessin = exige<HTMLSelectElement>('[data-role="dessin-a-exporter"]');
+const champProjet = exige<HTMLInputElement>('[data-role="projet"]');
+const champElement = exige<HTMLInputElement>('[data-role="element"]');
 const fichier = exige<HTMLInputElement>('[data-role="ouvrir"]');
 const zones = {
   rigidite: exige<HTMLElement>('[data-role="rigidite"]'),
@@ -149,6 +151,26 @@ function sauvegarder(): void {
     localStorage.setItem(CLE_STOCKAGE, modeleEnJson(modele));
   } catch {
     /* sans stockage, la saisie vit le temps de la page */
+  }
+}
+
+const CLE_CARTOUCHE = 'poutres-continues:cartouche';
+
+/** Projet et element de la note, gardes a part du modele : ils ne sont pas des donnees de calcul. */
+function cartoucheSauvegarde(): { projet: string; element: string } {
+  try {
+    const lu = JSON.parse(localStorage.getItem(CLE_CARTOUCHE) ?? '{}') as { projet?: unknown; element?: unknown };
+    return { projet: typeof lu.projet === 'string' ? lu.projet : '', element: typeof lu.element === 'string' ? lu.element : '' };
+  } catch {
+    return { projet: '', element: '' };
+  }
+}
+
+function sauvegarderCartouche(): void {
+  try {
+    localStorage.setItem(CLE_CARTOUCHE, JSON.stringify({ projet: champProjet.value, element: champElement.value }));
+  } catch {
+    /* sans stockage, le cartouche vit le temps de la page */
   }
 }
 
@@ -499,15 +521,7 @@ document.addEventListener('click', (evenement) => {
       ...avertissementsDuCalcul(c),
     ];
     const html = noteDeCalculHtml(
-      {
-        titre: `Poutre de ${cote(c.poutre.longueur)} m, ${c.poutre.appuis.length} appuis`,
-        date: new Date().toISOString().slice(0, 10),
-        entrees: blocsDEntree(c),
-        dessins: dessins(c).map((d) => d.svg),
-        resultats: blocsDeSortie(c),
-        avertissements,
-        hypotheses: HYPOTHESES,
-      },
+      noteDuCalcul(c, { projet: champProjet.value, element: champElement.value, date: new Date().toISOString().slice(0, 10) }, avertissements),
       STYLES_TRACE
     );
     ouvrirOuTelecharger('poutre-note.html', html);
@@ -516,6 +530,11 @@ document.addEventListener('click', (evenement) => {
 
 // --- Demarrage ---------------------------------------------------------------------
 
+const cartouche = cartoucheSauvegarde();
+champProjet.value = cartouche.projet;
+champElement.value = cartouche.element;
+champProjet.addEventListener('input', sauvegarderCartouche);
+champElement.addEventListener('input', sauvegarderCartouche);
 chargerModele(modeleSauvegarde() ?? modeleParDefaut());
 
 // Hors navigateur (tests), pas de service worker.

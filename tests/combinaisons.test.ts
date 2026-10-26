@@ -63,7 +63,7 @@ describe('enveloppes, trois travees egales', () => {
     expect(e.appuis[0].R_min.valeur).toBeCloseTo(18.125, 8);
     expect(e.combinaison.variantes[e.appuis[0].R_min.variante].G).toBe(1);
     expect(e.appuis[0].R_min.zones).toEqual([1]);
-    expect(libelleDisposition(e, r.cas.zones, e.appuis[0].R_min)).toBe('(6.10) 1 G + 1.5 Q ; Q sur travee 2');
+    expect(libelleDisposition(e, r.cas.zones, e.appuis[0].R_min)).toBe('(6.10) 1 G + 1.5 Q ; Q sur travée 2');
   });
 
   it('(6.10a)/(6.10b) : la plus defavorable des deux', () => {
