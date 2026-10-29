@@ -63,7 +63,7 @@ describe('enveloppes, trois travees egales', () => {
     expect(e.appuis[0].R_min.valeur).toBeCloseTo(18.125, 8);
     expect(e.combinaison.variantes[e.appuis[0].R_min.variante].G).toBe(1);
     expect(e.appuis[0].R_min.zones).toEqual([1]);
-    expect(libelleDisposition(e, r.cas.zones, e.appuis[0].R_min)).toBe('(6.10) 1 G + 1.5 Q ; Q sur travée 2');
+    expect(libelleDisposition(e, r.cas.zones, e.appuis[0].R_min)).toBe('(6.10) 1 G + 1,5 Q ; Q sur travée 2');
   });
 
   it('(6.10a)/(6.10b) : la plus defavorable des deux', () => {
@@ -73,6 +73,13 @@ describe('enveloppes, trois travees egales', () => {
     const ab = calculerCombinaisons(troisTravees(), donnees({ formule: '6.10ab' }), P);
     expect(ab.elu.appuis[1].M_min.valeur).toBeCloseTo(-50.5625, 6);
     expect(ab.elu.combinaison.variantes[ab.elu.appuis[1].M_min.variante].nom).toContain('6.10b');
+    expect(ab.elu.combinaison.variantes.map((v) => v.nom)).toEqual([
+      '(6.10a) 1,35 G + 1,5 × 0,7 Q',
+      '(6.10a) 1 G + 1,5 × 0,7 Q',
+      '(6.10b) 0,85 × 1,35 G + 1,5 Q',
+      '(6.10b) 1 G + 1,5 Q',
+    ]);
+    expect(r.frequente.combinaison.variantes.map((v) => v.nom)).toEqual(['G + 0,5 Q']);
   });
 
   it('ELS quasi permanent : G + psi2 Q', () => {

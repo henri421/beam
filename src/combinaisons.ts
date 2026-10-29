@@ -335,22 +335,24 @@ export function combinaisons(profil: ProfilPoutre, d: DonneesCombinaisons, avecT
   const gi = profil.gamma_G_inf.valeur;
   const gq = profil.gamma_Q.valeur;
   const xi = profil.xi.valeur;
+  // Noms lisibles : virgule decimale et signe de multiplication.
+  const f = (v: number) => nombreAffiche(v);
   const eluBase =
     d.formule === '6.10'
       ? [
-          { nom: `(6.10) ${gs} G + ${gq} Q`, G: gs, Q: gq },
-          { nom: `(6.10) ${gi} G + ${gq} Q`, G: gi, Q: gq },
+          { nom: `(6.10) ${f(gs)} G + ${f(gq)} Q`, G: gs, Q: gq },
+          { nom: `(6.10) ${f(gi)} G + ${f(gq)} Q`, G: gi, Q: gq },
         ]
       : [
-          { nom: `(6.10a) ${gs} G + ${gq}x${d.psi0} Q`, G: gs, Q: gq * d.psi0 },
-          { nom: `(6.10a) ${gi} G + ${gq}x${d.psi0} Q`, G: gi, Q: gq * d.psi0 },
-          { nom: `(6.10b) ${xi}x${gs} G + ${gq} Q`, G: xi * gs, Q: gq },
-          { nom: `(6.10b) ${gi} G + ${gq} Q`, G: gi, Q: gq },
+          { nom: `(6.10a) ${f(gs)} G + ${f(gq)} × ${f(d.psi0)} Q`, G: gs, Q: gq * d.psi0 },
+          { nom: `(6.10a) ${f(gi)} G + ${f(gq)} × ${f(d.psi0)} Q`, G: gi, Q: gq * d.psi0 },
+          { nom: `(6.10b) ${f(xi)} × ${f(gs)} G + ${f(gq)} Q`, G: xi * gs, Q: gq },
+          { nom: `(6.10b) ${f(gi)} G + ${f(gq)} Q`, G: gi, Q: gq },
         ];
   const els = (nom: string, psi: number): Combinaison => ({
     nom,
     etat: 'ELS',
-    variantes: variantesAvecT([{ nom: `G + ${psi === 1 ? '' : `${psi} `}Q`, G: 1, Q: psi }], 1, avecT),
+    variantes: variantesAvecT([{ nom: `G + ${psi === 1 ? '' : `${f(psi)} `}Q`, G: 1, Q: psi }], 1, avecT),
   });
   return {
     elu: { nom: `ELU fondamental ${d.formule === '6.10' ? '(6.10)' : '(6.10a) et (6.10b)'}`, etat: 'ELU', variantes: variantesAvecT(eluBase, d.gamma_T, avecT) },
