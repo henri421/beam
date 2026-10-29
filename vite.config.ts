@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
@@ -9,6 +10,14 @@ export default defineConfig({
   build: {
     outDir: '../docs',
     emptyOutDir: false,
+    // Deux pages, une seule compilation : la version anglaise vit dans `en/`
+    // et charge le meme script, qui lit la langue sur `<html lang>`.
+    rollupOptions: {
+      input: {
+        fr: fileURLToPath(new URL('./app/index.html', import.meta.url)),
+        en: fileURLToPath(new URL('./app/en/index.html', import.meta.url)),
+      },
+    },
   },
   plugins: [
     VitePWA({

@@ -161,7 +161,7 @@ describe('noteDuCalcul — verifications', () => {
     const f = v.find((x) => x.nom === `Flexion, ${z0.zone.nom}`);
     expect(f).toBeDefined();
     expect(f!.taux).toBeCloseTo(z0.flexion!.M_Ed / z0.flexion!.M_Rd!, 9);
-    expect(f!.ok).toBe(f!.taux <= 1);
+    expect(f!.ok).toBe(f!.taux! <= 1);
     expect(f!.clause ?? '').toMatch(/6\.1/);
 
     const t0 = tranchants[0];
@@ -169,7 +169,7 @@ describe('noteDuCalcul — verifications', () => {
     expect(vt).toHaveLength(tranchants.length);
     expect(vt[0].taux).toBeCloseTo(t0.V_Ed_reduit / Math.min(t0.V_Rd_s, t0.V_Rd_max), 9);
     expect(vt[0].clause ?? '').toMatch(/6\.2\.3/);
-    expect(vt.every((x) => x.ok === x.taux <= 1)).toBe(true);
+    expect(vt.every((x) => x.ok === x.taux! <= 1)).toBe(true);
   });
 
   it('acier : section, cisaillement, deversement (s il s applique) et fleche par zone', () => {

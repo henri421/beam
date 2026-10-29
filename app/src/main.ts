@@ -8,7 +8,7 @@
  * et un bandeau signale qu'ils ne correspondent plus a la saisie.
  */
 
-import { blocsEnTexte, csv, notationHtml, notationTexte, nombreAffiche, noteDeCalculHtml, ouvrirOuTelecharger, resultatsEnCsv, svgAutonome, telecharger } from 'aedificium-ui';
+import { blocsEnTexte, definirLangue, langueDuDocument, csv, notationHtml, notationTexte, nombreAffiche, noteDeCalculHtml, ouvrirOuTelecharger, resultatsEnCsv, svgAutonome, telecharger } from 'aedificium-ui';
 import {
   libelleDisposition,
   resultatDeDisposition,
@@ -68,6 +68,9 @@ import {
   noteDuCalcul,
   type Calcul,
 } from './sorties';
+import { tr, trBlocs, trHtml, trNote } from './textes';
+
+definirLangue(langueDuDocument(document));
 import './style.css';
 
 /** Element attendu de la page ; son absence est une erreur de developpement. */
@@ -113,17 +116,17 @@ const zones = {
 };
 
 // Liste des profils en I, par famille, une fois pour toutes.
-exige<HTMLSelectElement>('[data-role="profils"]').innerHTML = profilsEnI()
+exige<HTMLSelectElement>('[data-role="profils"]').innerHTML = trHtml(profilsEnI()
   .map((f) => `<optgroup label="${f.famille}">${f.noms.map((n) => `<option value="${n}">${n}</option>`).join('')}</optgroup>`)
-  .join('');
+  .join(''));
 
 function montrer(el: HTMLElement, message: string | null): void {
-  el.textContent = message === null ? '' : notationTexte(message);
+  el.textContent = message === null ? '' : notationTexte(tr(message));
   el.hidden = message === null;
 }
 
 function alertes(messages: string[]): string {
-  return messages.map((m) => `<p class="alerte">${notationHtml(m)}</p>`).join('');
+  return messages.map((m) => `<p class="alerte">${notationHtml(tr(m))}</p>`).join('');
 }
 
 // --- Etat ---------------------------------------------------------------------
@@ -222,9 +225,9 @@ function ajusterLesGroupes(): void {
 // --- Listes ----------------------------------------------------------------------
 
 function rendreLesListes(): void {
-  zones.appuis.innerHTML = lignesAppuis(modele);
-  zones.rotules.innerHTML = lignesRotules(modele);
-  zones.charges.innerHTML = lignesCharges(modele);
+  zones.appuis.innerHTML = trHtml(lignesAppuis(modele));
+  zones.rotules.innerHTML = trHtml(lignesRotules(modele));
+  zones.charges.innerHTML = trHtml(lignesCharges(modele));
   signatureZones = '';
 }
 
@@ -236,8 +239,8 @@ function rendreFerraillage(poutre: Poutre): void {
   const signature = JSON.stringify([z, xs, modele.ba.actif, modele.acier.actif]);
   if (signature === signatureZones) return;
   signatureZones = signature;
-  zones.ferraillage.innerHTML = modele.ba.actif ? lignesFerraillage(modele, z, xs) : '';
-  zones.acierZones.innerHTML = modele.acier.actif ? lignesAcier(modele, z) : '';
+  zones.ferraillage.innerHTML = trHtml(modele.ba.actif ? lignesFerraillage(modele, z, xs) : '');
+  zones.acierZones.innerHTML = trHtml(modele.acier.actif ? lignesAcier(modele, z) : '');
 }
 
 /** Schema et rigidite en direct ; une saisie incoherente est signalee sans effacer le schema. */
@@ -248,7 +251,7 @@ function rafraichirSchema(): void {
     montrer(zones.erreurSaisie, lecture.message);
     return;
   }
-  zones.rigidite.textContent = `EI = ${nombreAffiche(lecture.poutre.EI, 0)} kN·m²`;
+  zones.rigidite.textContent = tr(`EI = ${nombreAffiche(lecture.poutre.EI, 0)} kN·m²`);
   try {
     verifierDonnees(lecture.poutre);
   } catch (e) {
@@ -256,11 +259,11 @@ function rafraichirSchema(): void {
     return;
   }
   montrer(zones.erreurSaisie, null);
-  zones.schema.innerHTML = dessinSchema(lecture.poutre);
+  zones.schema.innerHTML = trHtml(dessinSchema(lecture.poutre));
   if (modele.ba.actif || modele.acier.actif) rendreFerraillage(lecture.poutre);
   if (modele.acier.actif) {
     try {
-      zones.rigidite.textContent = `EI = ${nombreAffiche(caracteristiquesProfil(modele.acier.profil).EI, 0)} kN·m² (profil ${modele.acier.profil})`;
+      zones.rigidite.textContent = tr(`EI = ${nombreAffiche(caracteristiquesProfil(modele.acier.profil).EI, 0)} kN·m² (profil ${modele.acier.profil})`);
     } catch {
       // Profil inconnu : le calcul le dira.
     }
@@ -298,8 +301,8 @@ function determinants(env: Enveloppe): [string, Determinant][] {
 }
 
 function peindreResultat(c: Calcul): void {
-  zones.avertissements.innerHTML = alertes([...c.comb.avertissements, ...avertissementsEnveloppe(c.comb.elu)]);
-  selecteurVue.innerHTML = VUES.map(([k, l]) => `<option value="${k}"${k === vue ? ' selected' : ''}>${l}</option>`).join('');
+  zones.avertissements.innerHTML = trHtml(alertes([...c.comb.avertissements, ...avertissementsEnveloppe(c.comb.elu)]));
+  selecteurVue.innerHTML = trHtml(VUES.map(([k, l]) => `<option value="${k}"${k === vue ? ' selected' : ''}>${l}</option>`).join(''));
   const L = c.poutre.longueur;
   if (vue === 'direct') {
     zones.choixDisposition.hidden = true;
@@ -310,51 +313,53 @@ function peindreResultat(c: Calcul): void {
     const liste = determinants(env);
     zones.choixDisposition.hidden = false;
     const choisi = selecteurDisposition.value;
-    selecteurDisposition.innerHTML =
+    selecteurDisposition.innerHTML = trHtml(
       `<option value="">— enveloppe —</option>` +
-      liste.map(([nom, d], k) => `<option value="${k}"${String(k) === choisi ? ' selected' : ''}>${nom} — ${libelleDisposition(env, cas.zones, d)}</option>`).join('');
+        liste.map(([nom, d], k) => `<option value="${k}"${String(k) === choisi ? ' selected' : ''}>${nom} — ${libelleDisposition(env, cas.zones, d)}</option>`).join('')
+    );
     const k = selecteurDisposition.value;
     if (k !== '' && liste[Number(k)] !== undefined) {
       const d = liste[Number(k)][1];
       const r = resultatDeDisposition(cas, env.combinaison.variantes[d.variante], d.zones);
       peindreUnCas(r, `<p class="note">${env.combinaison.nom} — disposition : ${libelleDisposition(env, cas.zones, d)}.</p>`, vue === 'elu');
     } else {
-      zones.resume.innerHTML = resumeEnveloppe(env);
+      zones.resume.innerHTML = trHtml(resumeEnveloppe(env));
       const graphes = [dessinEnveloppe(env, L, 'M', `${env.combinaison.nom} — moment fléchissant`), dessinEnveloppe(env, L, 'V', `${env.combinaison.nom} — effort tranchant`)];
       if (env.combinaison.etat === 'ELS') graphes.push(dessinEnveloppe(env, L, 'w', `${env.combinaison.nom} — flèche`));
-      zones.diagrammes.innerHTML = graphes.join('');
-      zones.reactions.innerHTML = tableauEnveloppeAppuis(env, cas.zones);
-      zones.travees.innerHTML = tableauEnveloppeTravees(env, cas.zones);
+      zones.diagrammes.innerHTML = trHtml(graphes.join(''));
+      zones.reactions.innerHTML = trHtml(tableauEnveloppeAppuis(env, cas.zones));
+      zones.travees.innerHTML = trHtml(tableauEnveloppeTravees(env, cas.zones));
     }
   }
   if (c.acier === null) {
     zones.sectionAcier.hidden = true;
   } else {
     zones.sectionAcier.hidden = false;
-    zones.acierAvertissements.innerHTML = alertes(c.acier.resultat.avertissements);
-    zones.acierCorps.innerHTML = tableauAcier(c.acier.resultat);
+    zones.acierAvertissements.innerHTML = trHtml(alertes(c.acier.resultat.avertissements));
+    zones.acierCorps.innerHTML = trHtml(tableauAcier(c.acier.resultat));
   }
   if (c.ba === null) {
     zones.sectionBA.hidden = true;
   } else {
     const { donnees, resultat } = c.ba;
     zones.sectionBA.hidden = false;
-    zones.baAvertissements.innerHTML = alertes(resultat.avertissements);
-    zones.baCorps.innerHTML =
+    zones.baAvertissements.innerHTML = trHtml(alertes(resultat.avertissements));
+    zones.baCorps.innerHTML = trHtml(
       dessinEpure(resultat, L, donnees.aciers) +
-      tableauBAFlexion(resultat, donnees.aciers) +
-      tableauBAArrets(resultat) +
-      tableauBATranchant(resultat) +
-      tableauBAExtremites(resultat);
+        tableauBAFlexion(resultat, donnees.aciers) +
+        tableauBAArrets(resultat) +
+        tableauBATranchant(resultat) +
+        tableauBAExtremites(resultat)
+    );
   }
 }
 
 function peindreUnCas(r: ResultatPoutre, entete: string, sansFleche = false): void {
-  zones.resume.innerHTML = entete + resume(r);
+  zones.resume.innerHTML = trHtml(entete + resume(r));
   const g = sansFleche ? (['M', 'V'] as const) : (['M', 'V', 'w'] as const);
-  zones.diagrammes.innerHTML = g.map((x) => dessinDiagramme(r, x)).join('');
-  zones.reactions.innerHTML = tableauReactions(r);
-  zones.travees.innerHTML = tableauTravees(r);
+  zones.diagrammes.innerHTML = trHtml(g.map((x) => dessinDiagramme(r, x)).join(''));
+  zones.reactions.innerHTML = trHtml(tableauReactions(r));
+  zones.travees.innerHTML = trHtml(tableauTravees(r));
 }
 
 function calculer(): void {
@@ -374,9 +379,9 @@ function calculer(): void {
   // La liste des dessins exportables suit le calcul : l'epure n'existe
   // qu'avec le beton arme.
   const choisi = selecteurDessin.value;
-  selecteurDessin.innerHTML = dessins(calcul)
+  selecteurDessin.innerHTML = trHtml(dessins(calcul)
     .map(({ nom, titre }) => `<option value="${nom}"${nom === choisi ? ' selected' : ''}>${titre}</option>`)
-    .join('');
+    .join(''));
   peindreResultat(calcul);
   zones.corps.hidden = false;
 }
@@ -472,9 +477,9 @@ selecteurDisposition.addEventListener('change', () => {
   if (calcul !== null) peindreResultat(calcul);
 });
 
-selecteurExemple.innerHTML += Object.entries(EXEMPLES)
+selecteurExemple.innerHTML += trHtml(Object.entries(EXEMPLES)
   .map(([cle, e]) => `<option value="${cle}">${e.libelle}</option>`)
-  .join('');
+  .join(''));
 selecteurExemple.addEventListener('change', () => {
   const exemple = EXEMPLES[selecteurExemple.value];
   if (exemple !== undefined) chargerModele(structuredClone(exemple.modele));
@@ -510,9 +515,9 @@ document.addEventListener('click', (evenement) => {
   // navigateurs bloquent tous ceux qui suivent le premier.
   if (action === 'exporter-dessin') {
     const d = dessins(c).find((x) => x.nom === selecteurDessin.value);
-    if (d !== undefined) telecharger(`poutre-${d.nom}.svg`, svgAutonome(d.svg, STYLES_TRACE), 'image/svg+xml;charset=utf-8');
+    if (d !== undefined) telecharger(`poutre-${d.nom}.svg`, svgAutonome(trHtml(d.svg), STYLES_TRACE), 'image/svg+xml;charset=utf-8');
   } else if (action === 'exporter-resultats') {
-    telecharger('poutre-resultats.csv', resultatsEnCsv(blocsEnTexte([...blocsDEntree(c), ...blocsDeSortie(c)])), 'text/csv;charset=utf-8');
+    telecharger('poutre-resultats.csv', resultatsEnCsv(blocsEnTexte(trBlocs([...blocsDEntree(c), ...blocsDeSortie(c)]))), 'text/csv;charset=utf-8');
   } else if (action === 'exporter-valeurs') {
     telecharger('poutre-valeurs.csv', csv(valeursLeLongDeLaPoutre(c.direct)), 'text/csv;charset=utf-8');
   } else if (action === 'exporter-note') {
@@ -521,7 +526,7 @@ document.addEventListener('click', (evenement) => {
       ...avertissementsDuCalcul(c),
     ];
     const html = noteDeCalculHtml(
-      noteDuCalcul(c, { projet: champProjet.value, element: champElement.value, date: new Date().toISOString().slice(0, 10) }, avertissements),
+      trNote(noteDuCalcul(c, { projet: champProjet.value, element: champElement.value, date: new Date().toISOString().slice(0, 10) }, avertissements)),
       STYLES_TRACE
     );
     ouvrirOuTelecharger('poutre-note.html', html);

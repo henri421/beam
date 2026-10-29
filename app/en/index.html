@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="theme-color" content="#f7f7f6" />
+    <link rel="icon" href="../icone.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="../icone-192.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Continuous beams — internal forces and deflection of statically indeterminate beams</title>
+  </head>
+  <body>
+    <nav class="barre" aria-label="suite of tools">
+      <div class="barre-corps">
+        <span class="barre-nom">Aedificium &middot; Analysis</span>
+        <div class="barre-actions">
+          <a class="barre-lien" href="https://henri421.github.io/WebAedificium/" target="_blank" rel="noopener"
+            >Aedificium suite &#8599;</a
+          >
+          <a class="barre-langue" href="../" hreflang="fr" lang="fr" aria-label="Version française">FR</a>
+        </div>
+      </div>
+    </nav>
+
+    <header>
+      <h1>Continuous beams</h1>
+      <p class="sous-titre">
+        Reactions, bending moments, shear forces and deflected shape of a straight continuous or statically indeterminate
+        beam: simple supports, fixed supports, sliding fixed supports, springs, hinges and support settlements.
+      </p>
+      <p class="avertissement">
+        First-order linear elastic analysis; envelopes of the EN 1990 combinations with alternating variable loads;
+        required reinforcement, resistance of the chosen bars and curtailment to EN 1992-1-1:2004, recommended values.
+        The reinforcement remains to be designed and checked.
+      </p>
+    </header>
+
+    <main>
+      <section id="saisie" aria-label="beam input">
+        <form id="formulaire" autocomplete="off">
+          <div class="selecteur">
+            <label for="exemple"><span>Start from an example</span></label>
+            <select id="exemple" data-role="exemple">
+              <option value="">&mdash;</option>
+            </select>
+          </div>
+
+          <fieldset>
+            <legend>Beam</legend>
+            <label><span>Total length L (m)</span><input type="text" inputmode="decimal" data-champ="longueur" /></label>
+            <label><span>Modulus E (MPa)</span><input type="text" inputmode="decimal" data-champ="E" /></label>
+            <label><span>Second moment of area I (cm<sup>4</sup>)</span><input type="text" inputmode="decimal" data-champ="I" /></label>
+            <p class="note" data-role="rigidite"></p>
+          </fieldset>
+
+          <fieldset>
+            <legend>Supports</legend>
+            <div data-role="appuis"></div>
+            <div class="boutons">
+              <button type="button" data-action="ajouter" data-liste="appuis">+ support</button>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Internal hinges</legend>
+            <div data-role="rotules"></div>
+            <div class="boutons">
+              <button type="button" data-action="ajouter" data-liste="rotules">+ hinge</button>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Loads</legend>
+            <div data-role="charges"></div>
+            <div class="boutons">
+              <button type="button" data-action="ajouter" data-liste="charges" data-type="ponctuelle">+ point</button>
+              <button type="button" data-action="ajouter" data-liste="charges" data-type="repartie">+ distributed</button>
+              <button type="button" data-action="ajouter" data-liste="charges" data-type="lineaire">+ triangular</button>
+              <button type="button" data-action="ajouter" data-liste="charges" data-type="moment">+ moment</button>
+            </div>
+            <p class="note">
+              Forces and distributed loads positive downwards; moment positive anticlockwise (&#8634;). A triangular
+              load goes from q<sub>a</sub> at a to q<sub>b</sub> at b: with two non-zero values, it is trapezoidal.
+            </p>
+          </fieldset>
+
+          <fieldset>
+            <legend>Combinations &middot; EN 1990</legend>
+            <label><span>Fundamental ULS</span>
+              <select data-champ="comb.formule">
+                <option value="6.10">(6.10)</option>
+                <option value="6.10ab">(6.10a) and (6.10b)</option>
+              </select>
+            </label>
+            <label><span>&psi;<sub>0</sub> of Q</span><input type="text" inputmode="decimal" data-champ="comb.psi0" /></label>
+            <label><span>&psi;<sub>1</sub> of Q</span><input type="text" inputmode="decimal" data-champ="comb.psi1" /></label>
+            <label><span>&psi;<sub>2</sub> of Q</span><input type="text" inputmode="decimal" data-champ="comb.psi2" /></label>
+            <label><span>&gamma; of the settlements (ULS)</span><input type="text" inputmode="decimal" data-champ="comb.gamma_T" /></label>
+            <p class="note">
+              G: &gamma;<sub>G</sub> = 1.35 or 1 over the whole beam; Q: &gamma;<sub>Q</sub> = 1.5, placed span by
+              span where it is unfavourable. The &psi; factors depend on the category of use (EN 1990 Table A1.1);
+              &gamma; of the settlements according to the type of analysis (EN 1992-1-1 2.3.1.3).
+            </p>
+          </fieldset>
+
+          <fieldset>
+            <legend>Reinforced concrete &middot; EN 1992-1-1</legend>
+            <label class="case"><input type="checkbox" data-champ="ba.actif" /><span>design in reinforced concrete</span></label>
+            <div class="groupe" data-groupe="ba">
+              <label><span>Section</span>
+                <select data-champ="ba.forme">
+                  <option value="rectangle">rectangular</option>
+                  <option value="te">T-section</option>
+                </select>
+              </label>
+              <label><span>b<sub>w</sub> (mm)</span><input type="text" inputmode="decimal" data-champ="ba.b_w" /></label>
+              <label><span>h (mm)</span><input type="text" inputmode="decimal" data-champ="ba.h" /></label>
+              <div class="groupe" data-groupe="te">
+                <label><span>b<sub>eff</sub> (mm)</span><input type="text" inputmode="decimal" data-champ="ba.b_eff" /></label>
+                <label><span>h<sub>f</sub> (mm)</span><input type="text" inputmode="decimal" data-champ="ba.h_f" /></label>
+              </div>
+              <label><span>f<sub>ck</sub> (MPa)</span><input type="text" inputmode="decimal" data-champ="ba.fck" /></label>
+              <label><span>f<sub>yk</sub> (MPa)</span><input type="text" inputmode="decimal" data-champ="ba.fyk" /></label>
+              <label><span>Ductility class</span>
+                <select data-champ="ba.classe">
+                  <option value="A">A</option>
+                  <option value="B">B</option>
+                  <option value="C">C</option>
+                </select>
+              </label>
+              <label><span>a<sub>inf</sub>, fibre &rarr; axis of the bottom bars (mm)</span><input type="text" inputmode="decimal" data-champ="ba.a_inf" /></label>
+              <label><span>a<sub>sup</sub>, fibre &rarr; axis of the top bars (mm)</span><input type="text" inputmode="decimal" data-champ="ba.a_sup" /></label>
+              <label><span>cot &theta; (1 to 2.5)</span><input type="text" inputmode="decimal" data-champ="ba.cotTheta" /></label>
+              <label><span>Links: &Oslash; (mm)</span><input type="text" inputmode="decimal" data-champ="ba.cadre_phi" /></label>
+              <label><span>Links: number of legs</span><input type="text" inputmode="decimal" data-champ="ba.cadre_brins" /></label>
+              <label><span>Links: spacing s (mm)</span><input type="text" inputmode="decimal" data-champ="ba.cadre_s" /></label>
+              <label><span>Width of the supports (mm)</span><input type="text" inputmode="decimal" data-champ="ba.largeurAppui" /></label>
+              <label class="case"><input type="checkbox" data-champ="ba.monolithique" /><span>monolithic end supports (9.2.1.2)</span></label>
+              <label><span>Continuous top bars (assembly)</span><input type="text" data-champ="ba.montage" placeholder="2HA12" /></label>
+              <p class="note">Chosen bars: write 3HA16, 2x12&hellip; Empty: none. The redistribution factor &delta; is entered on each intermediate support.</p>
+              <div data-role="ferraillage"></div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Steel &middot; EN 1993-1-1</legend>
+            <label class="case"><input type="checkbox" data-champ="acier.actif" /><span>check a steel beam</span></label>
+            <div class="groupe" data-groupe="acier">
+              <label><span>Section</span><select data-champ="acier.profil" data-role="profils"></select></label>
+              <label><span>Grade</span>
+                <select data-champ="acier.nuance">
+                  <option value="S235">S235</option>
+                  <option value="S275">S275</option>
+                  <option value="S355">S355</option>
+                  <option value="S420">S420</option>
+                  <option value="S460">S460</option>
+                </select>
+              </label>
+              <label class="case"><input type="checkbox" data-champ="acier.poidsPropre" /><span>add the self-weight of the section to the G loads</span></label>
+              <label class="case"><input type="checkbox" data-champ="acier.empeche" /><span>lateral-torsional buckling prevented (continuous restraint of the compression flange)</span></label>
+              <label><span>Deflection limit L / n, n =</span><input type="text" inputmode="decimal" data-champ="acier.flecheLimite" /></label>
+              <p class="note">
+                EI is taken from the section (E = 210 000 MPa, I<sub>y</sub>): the E and I fields above are ignored. Per
+                zone, the length between lateral restraints (empty: length of the zone) and, if calculated elsewhere,
+                M<sub>cr</sub>; otherwise M<sub>cr</sub> is taken with C<sub>1</sub> = 1, on the safe side.
+              </p>
+              <div data-role="acier-zones"></div>
+            </div>
+          </fieldset>
+
+          <p data-role="erreur-saisie" class="erreur" role="alert" hidden></p>
+          <div class="boutons boutons-calcul">
+            <button type="submit" class="principal">Calculate</button>
+            <button type="button" data-action="enregistrer">Save the model</button>
+            <label class="bouton-fichier"
+              ><input type="file" accept=".json,application/json" data-role="ouvrir" hidden /><span>Open a model</span></label
+            >
+          </div>
+        </form>
+      </section>
+
+      <div class="colonne">
+        <section id="schema" aria-label="static diagram">
+          <h2>Static diagram</h2>
+          <div data-role="schema"></div>
+        </section>
+
+        <section id="resultats" aria-label="results">
+          <h2>Results</h2>
+          <p data-role="perime" class="alerte" hidden>
+            The input has changed since the last calculation: run the calculation again.
+          </p>
+          <p data-role="erreur-calcul" class="erreur" role="alert" hidden></p>
+          <p data-role="attente" class="note">Fill in the beam, then run the calculation.</p>
+          <div data-role="resultats-corps" hidden>
+            <div data-role="avertissements"></div>
+            <div class="selecteur">
+              <label for="vue"><span>Show</span></label>
+              <select id="vue" data-role="vue"></select>
+            </div>
+            <div class="selecteur" data-role="choix-disposition">
+              <label for="disposition"><span>Replay an arrangement</span></label>
+              <select id="disposition" data-role="disposition"></select>
+            </div>
+            <div data-role="resume"></div>
+            <h3>Diagrams</h3>
+            <div data-role="diagrammes"></div>
+            <h3>Supports</h3>
+            <div data-role="reactions"></div>
+            <h3>Spans</h3>
+            <div data-role="travees"></div>
+          </div>
+        </section>
+
+        <section id="beton-arme" aria-label="reinforced concrete" hidden>
+          <h2>Reinforced concrete &middot; ULS</h2>
+          <div data-role="ba-avertissements"></div>
+          <div data-role="ba-corps"></div>
+        </section>
+
+        <section id="acier" aria-label="steel" hidden>
+          <h2>Steel &middot; ULS and SLS</h2>
+          <div data-role="acier-avertissements"></div>
+          <div data-role="acier-corps"></div>
+        </section>
+
+        <section id="sorties" aria-label="outputs">
+          <h2>Outputs</h2>
+          <div class="cartouche">
+            <label><span>Project</span><input type="text" data-role="projet" autocomplete="off" /></label>
+            <label><span>Element</span><input type="text" data-role="element" autocomplete="off" placeholder="empty: default title" /></label>
+          </div>
+          <div class="boutons">
+            <label class="large"><span>Drawing</span><select data-role="dessin-a-exporter"></select></label>
+            <button type="button" data-action="exporter-dessin">Chosen drawing (SVG)</button>
+            <button type="button" data-action="exporter-resultats">Results (CSV)</button>
+            <button type="button" data-action="exporter-valeurs">Values along the beam (CSV)</button>
+            <button type="button" data-action="exporter-note">Calculation note (printable HTML)</button>
+          </div>
+          <p class="note">
+            The note opens in a tab and prints to PDF from the browser. The saved model (JSON) reopens as is in the
+            tool.
+          </p>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <p>
+        Displacement method, Euler-Bernoulli beam elements; exact solution between nodes (loads at most linear); exact
+        envelopes by superposition of the cases G, Q per span and settlements. Out of scope: variable second moment of
+        area, shear deformation, axial force and second order, one-way supports, several variable actions, cracked
+        deflection, torsion.
+      </p>
+    </footer>
+
+    <script type="module" src="../src/main.ts"></script>
+  </body>
+</html>
