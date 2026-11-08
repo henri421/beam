@@ -257,7 +257,7 @@ input[type='text']:focus {
 .groupe[hidden] {
   display: none;
 }
-
+/*
  * Avertissement de perimetre en rive et en angle. Il signale un resultat
  * potentiellement NON CONSERVATIF : c'est le seul bloc d'alerte de la page, et
  * il doit se voir.
