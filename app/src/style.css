@@ -57,6 +57,7 @@ body {
 }
 
 header,
+.feuilles,
 main,
 footer {
   max-width: 68rem;
@@ -640,3 +641,11 @@ svg .barre { stroke: var(--traction); stroke-width: 2.4; stroke-linecap: round; 
 .verdict-conforme { border-color: var(--ok); background: var(--ok-fond); color: var(--ok); }
 .verdict-non-conforme { border-color: var(--refus); background: var(--refus-fond); color: var(--refus); }
 .verdict-incomplet { border-color: var(--alerte); background: var(--alerte-fond); color: var(--alerte); }
+
+/* Barre des feuilles de calcul (projets de la suite). */
+.feuilles {
+  margin-top: 0.8rem;
+}
+.feuilles:empty {
+  display: none;
+}

@@ -8,6 +8,7 @@
  * et un bandeau signale qu'ils ne correspondent plus a la saisie.
  */
 
+import { brancherFeuilles, type BarreFeuilles, type Json } from 'aedificium-ui';
 import { blocsEnTexte, definirLangue, langueDuDocument, csv, notationHtml, notationTexte, nombreAffiche, noteDeCalculHtml, ouvrirOuTelecharger, resultatsEnCsv, svgAutonome, telecharger } from 'aedificium-ui';
 import {
   libelleDisposition,
@@ -149,7 +150,14 @@ let vue: Vue = 'elu';
 let signatureZones = '';
 
 /** Le stockage local peut etre interdit (navigation privee, apercu) : on s'en passe. */
+/** Feuilles de calcul d'un projet de la suite. */
+let barre: BarreFeuilles | null = null;
+
 function sauvegarder(): void {
+  if (barre?.dansUnProjet()) {
+    barre.signaler();
+    return;
+  }
   try {
     localStorage.setItem(CLE_STOCKAGE, modeleEnJson(modele));
   } catch {
@@ -541,6 +549,14 @@ champElement.value = cartouche.element;
 champProjet.addEventListener('input', sauvegarderCartouche);
 champElement.addEventListener('input', sauvegarderCartouche);
 chargerModele(modeleSauvegarde() ?? modeleParDefaut());
+
+barre = brancherFeuilles({
+  app: 'beam',
+  nomApp: exige<HTMLElement>('header h1').textContent ?? 'beam',
+  conteneur: exige<HTMLElement>('[data-role="feuilles"]'),
+  lire: () => JSON.parse(modeleEnJson(modele)) as Json,
+  charger: (d) => chargerModele(d === null ? modeleParDefaut() : modeleDepuisJson(JSON.stringify(d))),
+});
 
 // Hors navigateur (tests), pas de service worker.
 if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
