@@ -39,6 +39,7 @@ import {
   blocsResultats,
   messageDErreur,
 } from './vue';
+import { VERSION_OUTIL } from './version';
 
 export const PROFIL = profilRecommande();
 
@@ -353,7 +354,7 @@ export function noteDuCalcul(
   const norme =
     c.acier !== null ? 'EN 1990:2002, EN 1993-1-1:2005' : c.ba !== null ? 'EN 1990:2002, EN 1992-1-1:2004' : 'EN 1990:2002';
   return {
-    cartouche: { projet: cartouche.projet, element, date: cartouche.date, norme, outil: 'poutres-continues' },
+    cartouche: { version: VERSION_OUTIL, projet: cartouche.projet, element, date: cartouche.date, norme, outil: 'poutres-continues' },
     sections: {
       geometrie,
       materiaux,
