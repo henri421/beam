@@ -107,6 +107,36 @@
           </fieldset>
 
           <fieldset>
+            <legend>Annexe nationale et coefficients</legend>
+            <label><span>Annexe nationale</span>
+              <select data-champ="comb.annexe">
+                <option value="recommande">Valeurs recommandées</option>
+                <option value="lu">Luxembourg (AN-LU:2020, à vérifier)</option>
+              </select>
+            </label>
+            <p class="avertissement" data-role="bandeau-annexe" hidden></p>
+            <label><span>&gamma;<sub>G,sup</sub> (EN 1990 A1.2(B))</span><input type="text" inputmode="decimal" data-champ="coef.gamma_G_sup" /></label>
+            <label><span>&gamma;<sub>G,inf</sub> (EN 1990 A1.2(B))</span><input type="text" inputmode="decimal" data-champ="coef.gamma_G_inf" /></label>
+            <label><span>&gamma;<sub>Q</sub> (EN 1990 A1.2(B))</span><input type="text" inputmode="decimal" data-champ="coef.gamma_Q" /></label>
+            <label><span>&xi; (EN 1990 (6.10b))</span><input type="text" inputmode="decimal" data-champ="coef.xi" /></label>
+            <label><span>&gamma;<sub>C</sub> (2.1N)</span><input type="text" inputmode="decimal" data-champ="coef.gamma_C" /></label>
+            <label><span>&gamma;<sub>S</sub> (2.1N)</span><input type="text" inputmode="decimal" data-champ="coef.gamma_S" /></label>
+            <label><span>&alpha;<sub>cc</sub> (3.1.6(1))</span><input type="text" inputmode="decimal" data-champ="coef.alpha_cc" /></label>
+            <label><span>&alpha;<sub>ct</sub> (3.1.6(2))</span><input type="text" inputmode="decimal" data-champ="coef.alpha_ct" /></label>
+            <label><span>k<sub>1</sub> (5.5(4))</span><input type="text" inputmode="decimal" data-champ="coef.k1" /></label>
+            <label><span>facteur de k<sub>2</sub> (5.5(4))</span><input type="text" inputmode="decimal" data-champ="coef.facteur_k2" /></label>
+            <label><span>k<sub>3</sub> (5.5(4))</span><input type="text" inputmode="decimal" data-champ="coef.k3" /></label>
+            <label><span>facteur de k<sub>4</sub> (5.5(4))</span><input type="text" inputmode="decimal" data-champ="coef.facteur_k4" /></label>
+            <label><span>k<sub>5</sub> (5.5(4))</span><input type="text" inputmode="decimal" data-champ="coef.k5" /></label>
+            <label><span>k<sub>6</sub> (5.5(4))</span><input type="text" inputmode="decimal" data-champ="coef.k6" /></label>
+            <label><span>&beta;<sub>1</sub> (9.2.1.2(1))</span><input type="text" inputmode="decimal" data-champ="coef.beta_1" /></label>
+            <label><span>s<sub>l,max</sub> / d (9.2.2(6))</span><input type="text" inputmode="decimal" data-champ="coef.s_l_max" /></label>
+            <p class="note">
+              Préremplis par l’annexe choisie ; une valeur changée est marquée imposée dans la note.
+            </p>
+          </fieldset>
+
+          <fieldset>
             <legend>Béton armé &middot; EN 1992-1-1</legend>
             <label class="case"><input type="checkbox" data-champ="ba.actif" /><span>dimensionner en béton armé</span></label>
             <div class="groupe" data-groupe="ba">

@@ -12,7 +12,11 @@ import {
   type ElementNote,
   type NoteDeCalcul,
   type VerificationNote,
+  avertissementAnnexeLu,
+  libelleAnnexe,
+  traduireSource,
 } from 'aedificium-ui';
+import type { ProfilPoutre } from '../../src/index';
 import {
   LIBELLES_APPUI,
   LIBELLES_CHARGE,
@@ -29,7 +33,7 @@ import {
   type ResultatCombinaisons,
   type ResultatPoutre,
 } from '../../src/index';
-import { donneesDepuisModele, type ModeleSaisie } from './form';
+import { donneesDepuisModele, profilDuModele, type ModeleSaisie } from './form';
 import { cote, dessinDiagramme, dessinEnveloppe, dessinEpure, dessinSchema } from './dessin';
 import {
   avertissementsEnveloppe,
@@ -41,6 +45,7 @@ import {
 } from './vue';
 import { VERSION_OUTIL } from './version';
 
+/** Profil recommande, pour les tests et la documentation ; le calcul emploie `Calcul.profil`. */
 export const PROFIL = profilRecommande();
 
 /** Nombre saisi, affiche a la francaise : 3 decimales au plus, sans zeros inutiles. */
@@ -57,6 +62,8 @@ export interface Calcul {
   ba: { donnees: DonneesBA; resultat: ResultatBA } | null;
   acier: { donnees: DonneesAcier; resultat: ResultatAcier } | null;
   modele: ModeleSaisie;
+  /** Profil normatif du calcul (annexe et coefficients saisis). */
+  profil: ProfilPoutre;
 }
 
 export type ResultatCalcul = { ok: true; calcul: Calcul } | { ok: false; message: string };
@@ -66,17 +73,18 @@ export function calculerTout(m: ModeleSaisie): ResultatCalcul {
   const lecture = donneesDepuisModele(m);
   if (!lecture.ok) return { ok: false, message: lecture.message };
   try {
+    const profil = profilDuModele(m);
     const direct = calculerPoutre(lecture.poutre);
-    const comb = calculerCombinaisons(lecture.poutre, lecture.combinaisons, PROFIL, lecture.ba?.classeAcier ?? 'B');
+    const comb = calculerCombinaisons(lecture.poutre, lecture.combinaisons, profil, lecture.ba?.classeAcier ?? 'B');
     const ba =
       lecture.ba === null
         ? null
-        : { donnees: lecture.ba, resultat: calculerBetonArme(comb.casELU, comb.elu, lecture.ba, PROFIL, lecture.combinaisons.redistribution) };
+        : { donnees: lecture.ba, resultat: calculerBetonArme(comb.casELU, comb.elu, lecture.ba, profil, lecture.combinaisons.redistribution) };
     const acier =
       lecture.acier === null
         ? null
         : { donnees: lecture.acier, resultat: calculerAcier(comb.cas.zones, comb.elu, comb.caracteristique, lecture.acier) };
-    return { ok: true, calcul: { poutre: lecture.poutre, direct, comb, ba, acier, modele: structuredClone(m) } };
+    return { ok: true, calcul: { poutre: lecture.poutre, direct, comb, ba, acier, modele: structuredClone(m), profil } };
   } catch (e) {
     return { ok: false, message: messageDErreur(e) };
   }
@@ -85,6 +93,7 @@ export function calculerTout(m: ModeleSaisie): ResultatCalcul {
 /** Avertissements du calcul, sans le message de calcul perime, ajoute par l'ecran. */
 export function avertissementsDuCalcul(c: Calcul): string[] {
   return [
+    ...(c.modele.combinaisons.annexe === 'lu' && avertissementAnnexeLu() !== '' ? [avertissementAnnexeLu()] : []),
     ...c.comb.avertissements,
     ...avertissementsEnveloppe(c.comb.elu),
     ...(c.ba === null ? [] : c.ba.resultat.avertissements),
@@ -150,11 +159,11 @@ export function blocsDEntree(c: Calcul): BlocResultat[] {
         { symbole: 'ELU', libelle: 'expression', valeur: m.combinaisons.formule === '6.10' ? '(6.10)' : '(6.10a) et (6.10b)' },
         { symbole: 'psi_0, psi_1, psi_2', libelle: 'coefficients de Q', valeur: `${affiche(m.combinaisons.psi0)} ; ${affiche(m.combinaisons.psi1)} ; ${affiche(m.combinaisons.psi2)}` },
         { symbole: 'gamma_T', libelle: "coefficient des tassements à l'ELU", valeur: affiche(m.combinaisons.gamma_T) },
-        ...Object.entries(PROFIL)
+        ...Object.entries(c.profil)
           .filter(([, v]) => typeof v === 'object')
-          .map(([k, v]) => ({ symbole: k, libelle: (v as { source: string }).source, valeur: nombreAffiche((v as { valeur: number }).valeur) })),
+          .map(([k, v]) => ({ symbole: k, libelle: traduireSource((v as { source: string }).source), valeur: nombreAffiche((v as { valeur: number }).valeur) })),
       ],
-      note: `Profil : ${PROFIL.nom} (${PROFIL.date}).`,
+      note: `Annexe nationale : ${libelleAnnexe(m.combinaisons.annexe)}. Profil : ${c.profil.nom} (${c.profil.date}).`,
     },
   ];
   if (c.acier !== null) {
@@ -260,7 +269,7 @@ export function noteDuCalcul(
 
   // Hypotheses : liste commune, puis les lignes du profil normatif.
   const combinaisons = bloc('Combinaisons');
-  const clesProfil = Object.keys(PROFIL);
+  const clesProfil = Object.keys(c.profil);
   const hypotheses: ElementNote[] = [
     { type: 'liste', items: HYPOTHESES },
     enBloc({
@@ -353,8 +362,9 @@ export function noteDuCalcul(
     cartouche.element.trim() || `Poutre de ${cote(c.poutre.longueur)} m, ${c.poutre.appuis.length} appuis`;
   const norme =
     c.acier !== null ? 'EN 1990:2002, EN 1993-1-1:2005' : c.ba !== null ? 'EN 1990:2002, EN 1992-1-1:2004' : 'EN 1990:2002';
+  const normeLu = c.modele.combinaisons.annexe === 'lu' ? `${norme}, AN-LU:2020 (ILNAS)` : norme;
   return {
-    cartouche: { version: VERSION_OUTIL, projet: cartouche.projet, element, date: cartouche.date, norme, outil: 'poutres-continues' },
+    cartouche: { version: VERSION_OUTIL, projet: cartouche.projet, element, date: cartouche.date, norme: normeLu, outil: 'poutres-continues' },
     sections: {
       geometrie,
       materiaux,

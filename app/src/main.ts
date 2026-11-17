@@ -8,7 +8,8 @@
  * et un bandeau signale qu'ils ne correspondent plus a la saisie.
  */
 
-import { brancherFeuilles, type BarreFeuilles, type Json } from 'aedificium-ui';
+import { avertissementAnnexeLu, brancherFeuilles, lireAnnexe, type BarreFeuilles, type Json } from 'aedificium-ui';
+import { coefsDeLAnnexe, type CleProfil } from './annexe';
 import { blocsEnTexte, definirLangue, langueDuDocument, csv, notationHtml, notationTexte, nombreAffiche, noteDeCalculHtml, ouvrirOuTelecharger, resultatsEnCsv, svgAutonome, telecharger } from 'aedificium-ui';
 import {
   libelleDisposition,
@@ -196,9 +197,10 @@ function modeleSauvegarde(): ModeleSaisie | null {
 
 // --- Champs statiques ------------------------------------------------------------
 
-type Chemin = 'longueur' | 'E' | 'I' | `comb.${string}` | `ba.${string}` | `acier.${string}`;
+type Chemin = 'longueur' | 'E' | 'I' | `comb.${string}` | `coef.${string}` | `ba.${string}` | `acier.${string}`;
 
 function lireChemin(chemin: Chemin): string | boolean {
+  if (chemin.startsWith('coef.')) return modele.combinaisons.coefs[chemin.slice(5) as CleProfil];
   if (chemin.startsWith('comb.')) return (modele.combinaisons as unknown as Record<string, string>)[chemin.slice(5)];
   if (chemin.startsWith('ba.')) return (modele.ba as unknown as Record<string, string | boolean>)[chemin.slice(3)];
   if (chemin.startsWith('acier.')) return (modele.acier as unknown as Record<string, string | boolean>)[chemin.slice(6)];
@@ -206,7 +208,14 @@ function lireChemin(chemin: Chemin): string | boolean {
 }
 
 function ecrireChemin(chemin: Chemin, valeur: string | boolean): void {
-  if (chemin.startsWith('comb.')) (modele.combinaisons as unknown as Record<string, unknown>)[chemin.slice(5)] = valeur;
+  if (chemin.startsWith('coef.')) modele.combinaisons.coefs[chemin.slice(5) as CleProfil] = String(valeur);
+  else if (chemin === 'comb.annexe') {
+    // Changer d'annexe repremplit tous les coefficients ; chacun reste modifiable.
+    const a = lireAnnexe(valeur);
+    modele.combinaisons.annexe = a;
+    modele.combinaisons.coefs = coefsDeLAnnexe(a);
+    ecrireChampsStatiques();
+  } else if (chemin.startsWith('comb.')) (modele.combinaisons as unknown as Record<string, unknown>)[chemin.slice(5)] = valeur;
   else if (chemin.startsWith('ba.')) (modele.ba as unknown as Record<string, unknown>)[chemin.slice(3)] = valeur;
   else if (chemin.startsWith('acier.')) (modele.acier as unknown as Record<string, unknown>)[chemin.slice(6)] = valeur;
   else modele[chemin as 'longueur' | 'E' | 'I'] = String(valeur);
@@ -225,6 +234,9 @@ function ecrireChampsStatiques(): void {
 }
 
 function ajusterLesGroupes(): void {
+  const bandeauLu = exige<HTMLElement>('[data-role="bandeau-annexe"]');
+  bandeauLu.textContent = avertissementAnnexeLu();
+  bandeauLu.hidden = modele.combinaisons.annexe !== 'lu' || bandeauLu.textContent === '';
   exige<HTMLElement>('[data-groupe="ba"]').hidden = !modele.ba.actif;
   exige<HTMLElement>('[data-groupe="te"]').hidden = modele.ba.forme !== 'te';
   exige<HTMLElement>('[data-groupe="acier"]').hidden = !modele.acier.actif;

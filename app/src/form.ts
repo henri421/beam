@@ -6,7 +6,8 @@
  * Tout ici est PUR — aucun `document`. Le cablage vit dans `main.ts`.
  */
 
-import { echapper, lireNombre, nombreAffiche } from 'aedificium-ui';
+import { echapper, lireAnnexe, lireNombre, nombreAffiche, type AnnexeNationale } from 'aedificium-ui';
+import { CLES, coefsDeLAnnexe, profilDeCalcul, type CleProfil } from './annexe';
 import { familles, type Nuance } from 'sections-ec3';
 import {
   caracteristiquesProfil,
@@ -57,6 +58,10 @@ export interface SaisieCombinaisons {
   psi1: string;
   psi2: string;
   gamma_T: string;
+  /** Annexe nationale qui preremplit les coefficients du profil (lot E). */
+  annexe: AnnexeNationale;
+  /** Coefficients du profil normatif, modifiables. */
+  coefs: Record<CleProfil, string>;
 }
 
 export interface SaisieBA {
@@ -126,7 +131,7 @@ export function acierParDefaut(): SaisieAcier {
 
 export function combinaisonsParDefaut(): SaisieCombinaisons {
   // psi de la categorie A (habitation), tableau A1.1 : a adapter a l'usage.
-  return { formule: '6.10', psi0: '0.7', psi1: '0.5', psi2: '0.3', gamma_T: '1' };
+  return { formule: '6.10', psi0: '0.7', psi1: '0.5', psi2: '0.3', gamma_T: '1', annexe: 'recommande', coefs: coefsDeLAnnexe('recommande') };
 }
 
 export function baParDefaut(): SaisieBA {
@@ -297,6 +302,13 @@ function nombre(texte: string, quoi: string): number {
   const v = lireNombre(texte);
   if (v === null) throw new SaisieInvalide(`${quoi} : nombre à renseigner.`);
   return v;
+}
+
+/** Profil normatif du calcul, depuis l'annexe et les coefficients saisis. */
+export function profilDuModele(m: ModeleSaisie): ReturnType<typeof profilDeCalcul> {
+  const c = m.combinaisons;
+  const valeurs = Object.fromEntries(CLES.map((k) => [k, nombre(c.coefs[k], k)])) as Record<CleProfil, number>;
+  return profilDeCalcul(c.annexe, valeurs);
 }
 
 function nombreOuZero(texte: string, quoi: string): number {
@@ -662,6 +674,13 @@ export function modeleDepuisJson(contenu: string): ModeleSaisie {
       psi1: t(c.psi1, cDef.psi1),
       psi2: t(c.psi2, cDef.psi2),
       gamma_T: t(c.gamma_T, cDef.gamma_T),
+      annexe: lireAnnexe(c.annexe),
+      // Fichier anterieur au lot E : coefficients de l'annexe relue.
+      coefs: (() => {
+        const def = coefsDeLAnnexe(lireAnnexe(c.annexe));
+        const lus = objet(c.coefs);
+        return Object.fromEntries(CLES.map((k) => [k, t(lus[k], def[k])])) as Record<CleProfil, string>;
+      })(),
     },
     ba: {
       actif: b.actif === true,
