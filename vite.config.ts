@@ -68,6 +68,9 @@ export default defineConfig({
   // Vitest reutilise ce fichier : sans ce champ, le `root: 'app'` ci-dessus
   // s'appliquerait aussi aux tests, qui vivent hors de `app/`.
   test: {
+    // Test d affichage anglais (ecran, dessins, note et CSV) : 15 a 20 s en local
+    // depuis le volet des coefficients, au-dela des 5 s par defaut en CI (lot E).
+    testTimeout: 60_000,
     root: '.',
     exclude: ['**/node_modules/**', '**/dist/**', '.worktrees/**'],
   },
