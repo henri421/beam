@@ -10,7 +10,7 @@
 
 import { avertissementAnnexeLu, brancherFeuilles, lireAnnexe, type BarreFeuilles, type Json } from 'aedificium-ui';
 import { coefsDeLAnnexe, type CleProfil } from './annexe';
-import { blocsEnTexte, definirLangue, langueDuDocument, csv, notationHtml, notationTexte, nombreAffiche, noteDeCalculHtml, ouvrirOuTelecharger, resultatsEnCsv, svgAutonome, telecharger } from 'aedificium-ui';
+import { blocsEnTexte, definirLangue, langueDuDocument, csv, notationHtml, notationTexte, nombreAffiche, noteDeCalculHtml, telechargerNotePdf, ouvrirOuTelecharger, resultatsEnCsv, svgAutonome, telecharger } from 'aedificium-ui';
 import {
   libelleDisposition,
   resultatDeDisposition,
@@ -540,16 +540,16 @@ document.addEventListener('click', (evenement) => {
     telecharger('poutre-resultats.csv', resultatsEnCsv(blocsEnTexte(trBlocs([...blocsDEntree(c), ...blocsDeSortie(c)]))), 'text/csv;charset=utf-8');
   } else if (action === 'exporter-valeurs') {
     telecharger('poutre-valeurs.csv', csv(valeursLeLongDeLaPoutre(c.direct)), 'text/csv;charset=utf-8');
-  } else if (action === 'exporter-note') {
+  } else if (action === 'exporter-note' || action === 'exporter-note-pdf') {
+    const pdf = action === 'exporter-note-pdf';
     const avertissements = [
       ...(zones.perime.hidden ? [] : ['Les données saisies ont changé depuis ce calcul : la note décrit le dernier calcul lancé.']),
       ...avertissementsDuCalcul(c),
     ];
-    const html = noteDeCalculHtml(
-      trNote(noteDuCalcul(c, { projet: champProjet.value, element: champElement.value, date: new Date().toISOString().slice(0, 10) }, avertissements)),
-      STYLES_TRACE
-    );
-    ouvrirOuTelecharger('poutre-note.html', html);
+    const noteCalc = trNote(noteDuCalcul(c, { projet: champProjet.value, element: champElement.value, date: new Date().toISOString().slice(0, 10) }, avertissements));
+    // PDF construit au clic ; en cas d'echec, la note HTML prend le relais.
+    if (pdf) void telechargerNotePdf('poutre-note.pdf', noteCalc, STYLES_TRACE).catch(() => ouvrirOuTelecharger('poutre-note.html', noteDeCalculHtml(noteCalc, STYLES_TRACE)));
+    else ouvrirOuTelecharger('poutre-note.html', noteDeCalculHtml(noteCalc, STYLES_TRACE));
   }
 });
 
